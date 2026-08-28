@@ -49,3 +49,16 @@ samples, guidance on mobile development, and a full API reference.
 ## 1. Konfigurasi environment berjalan
 ## 2. Aplikasi dapat berjalan
 ## 3. Terdapat dokumentasi pada Git
+
+
+# Kendala Setup
+## Saya mengalami kendala setup ketika menginstall FLutter pertama kali dikarenakan saya menempatkan folder flutter nya di OneDrive, yang dimana direktori/path nya memiliki karakter jepang yang tidak bisa dibaca oleh sistem, sehingga saya panik.
+
+
+# Refleksi
+## 1. Kapan native lebih tepat dipilih daripada cross-platform?
+## ==> Native lebih tepat dipilih daripada cross-platform apabila pengembang aplikasi berencana untuk membuat aplikasi yang ditujukan pada satu tipe device saja, yakni Android maupun iOS. Hal ini dikarekanan native memiliki kode dan UI khusus untuk setipa platform dan akses API yang langsung. 
+## 2. Bagaimana perubahan state berhubungan dengan widget tree dan UI deklaratif?
+## ==> Ketika terjadi perubahan state di dalam aplikasi Flutter akan menandai widget yang bersangkutan dan memicu pengerjaan ulang metode build(). Proses ini menghasilkan pembentukan Widget Tree baru, yang selanjutnya akan dibandingkan untuk mendeteksi perubahan konfigurasi secara presisi. Hal ini membuat proses pembuatan ulang UI tetap berjalan responsif.
+## 3. Mengapa commit kecil dengan pesan jelas bermanfaat bagi pekerjaan tim dan portfolio?
+## ==> Commit kecil dengan pesan jelas bermanfaat bagi tim karena tim dapat memahami konteks/perubahan kode yang dimaksud oleh individu, yang nantinya dapat ditindaklanjuti oleh rekan tim sehingga menghindari miskomunikasi dan kesalahpahaman.
