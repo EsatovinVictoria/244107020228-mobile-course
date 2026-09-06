@@ -68,7 +68,7 @@ class DashboardPage extends StatelessWidget {
           final columns = constraints.maxWidth >= 700 ? 2 : 1;
           return Column(
             children: [
-              const ProfileHeader(),
+              const FixedProfileHeader(),
               Expanded(
                 child: GridView.count(
                   padding: const EdgeInsets.all(16),
@@ -147,6 +147,97 @@ class DashboardCard extends StatelessWidget {
           Expanded(child: Text(title)),
           Text(value, style: Theme.of(context).textTheme.headlineSmall),
         ]),
+      ),
+    );
+  }
+}
+
+// KODE GAGAL
+class UnstableProfileHeader extends StatelessWidget {
+  const UnstableProfileHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      // PERMASALAHAN: ScrollView Horizontal membuat lebar Row menjadi tak terbatas (infinity)
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 28,
+              child: Icon(Icons.person, size: 32),
+            ),
+            const SizedBox(width: 16),
+            // ERROR: Expanded bingung harus mengambil porsi berapa dari lebar tak terbatas!
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Esatovin Ebenhaezer Victoria',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text('NIM: 244107020228'),
+                  const Text('Kelas: TI-3H'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// KODE PERBAIKAN
+class FixedProfileHeader extends StatelessWidget {
+  const FixedProfileHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 28,
+              child: Icon(Icons.person, size: 32),
+            ),
+            const SizedBox(width: 16),
+            // SOLUSI: Hapus Expanded, gunakan Column biasa tanpa pembungkus flex
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Esatovin Ebenhaezer Victoria',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                const Text('NIM: 244107020228'),
+                const Text('Kelas: TI-3H'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
