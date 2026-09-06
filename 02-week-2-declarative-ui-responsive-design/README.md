@@ -107,6 +107,15 @@ Berikut merupakan tampilan aplikasi setelah dikembangkan.
 
 ![Tampilan Setelah Dikembangkan](screenshots/6_tugasUtama.png)
 
+Tampilan pada layar sempit (414x896):
+
+![Tampilan Layar Sempit](screenshots/6_tampilan_iPhoneXR_414x896.png)
+
+Tampilan pada layar lebar (1024x1366):
+
+![Tampilan Layar Lebar](screenshots/6_tampilaniPad_1024x1366.png)
+
+
 ## AI Prompt Challenge
 Menggunakan AI (Gemini) untuk membandingkan dua alternatif tata letak.
 
@@ -146,34 +155,191 @@ Menggunakan AI (Gemini) untuk membandingkan dua alternatif tata letak.
 
     Penggunaan LayoutBuilder yang dikombinasikan dengan pembungkus Semantics (seperti pada switch tema di kode Anda) memperjelas konteks elemen interaktif saat berpindah dari mode 1 kolom ke 2 kolom.
 
-    Keputusan dipilih: 
+    Keputusan dipilih: Layout Builder + GridView
 
     Alasan Teknis:
 
+    Responsif Optimal: Penggunaan LayoutBuilder memberi fleksibilitas untuk mengubah jumlah kolom (crossAxisCount: 1 di HP, 2 di tablet/desktop) sehingga tata letak tidak tertekan pada layar sempit.
+
+    Scroll & Efisiensi: Mempertahankan GridView di dalam Expanded menjaga efisiensi memori dan perilaku scrolling bawaan Flutter saat daftar kartu bertambah banyak.
+
     Bukti Verifikasi:
+
+    ![Tampilan Layout Builder + Column](screenshots/6_tampilan_promptDesain.png)
 
 2. Prompt Penguatan Konsep
 
-    Prompt: 
+    Prompt: Jelaskan kapan penggunaan Expanded justru menyebabkan overflow di dalam Row, beri contoh kode yang gagal dan perbaikannya
 
     Jawaban: 
+    Expanded pada dasarnya berfungsi untuk menyuruh widget anak mengisi sisa ruang kosong yang tersedia di dalam Row atau Column.
 
-    Keputusan dipilih: 
-
-    Alasan Teknis:
+    Expanded justru akan menyebabkan overflow (terutama error RenderFlex overflowed / Yellow-Black Striped) ketika dikombinasikan dengan widget yang membutuhkan lebar tidak terbatas (unconstrained width) secara horizontal atau dimasukkan ke dalam scroll view horizontal.
 
     Bukti Verifikasi:
+
+    Kode Program & Tampilan saat overflow pada Expanded:
+
+    class UnstableProfileHeader extends StatelessWidget {
+    const UnstableProfileHeader({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
+        ),
+        // PERMASALAHAN: ScrollView Horizontal membuat lebar Row menjadi tak terbatas (infinity)
+        child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+            children: [
+                const CircleAvatar(
+                radius: 28,
+                child: Icon(Icons.person, size: 32),
+                ),
+                const SizedBox(width: 16),
+                // ERROR: Expanded bingung harus mengambil porsi berapa dari lebar tak terbatas!
+                Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                    Text(
+                        'Esatovin Ebenhaezer Victoria',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('NIM: 244107020228'),
+                    const Text('Kelas: TI-3H'),
+                    ],
+                ),
+                ),
+            ],
+            ),
+        ),
+        );
+    }
+    }
+
+    ![Tampilan Overflow Expanded](screenshots/6_overflowExpanded.png)
+
+    Kode program & tampilan untuk solusi dari overflow pada Expanded:
+
+    class FixedProfileHeader extends StatelessWidget {
+    const FixedProfileHeader({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
+        ),
+        child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+            children: [
+                const CircleAvatar(
+                radius: 28,
+                child: Icon(Icons.person, size: 32),
+                ),
+                const SizedBox(width: 16),
+                // SOLUSI: Hapus Expanded, gunakan Column biasa tanpa pembungkus flex
+                Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                    Text(
+                    'Esatovin Ebenhaezer Victoria',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('NIM: 244107020228'),
+                    const Text('Kelas: TI-3H'),
+                ],
+                ),
+            ],
+            ),
+        ),
+        );
+    }
+    }
+
+    ![Tampilan Solusi Overflow Expanded](screenshots/6_solusi_overflowExpanded.png)
 
 3. Verification Prompt
 
-    Prompt: 
+    Prompt: Periksa kembali rekomendasi layout di atas: apakah tetap responsif di bawah 600px, apakah mengurangi aksesibilitas, dan apakah ada widget yang tidak tersedia di Flutter stabil saat ini?
 
     Jawaban: 
 
-    Keputusan dipilih: 
+    1. Ketersediaan Widget di Flutter Stabil
+    Semua widget yang digunakan resmi & stabil. LayoutBuilder, GridView.builder, SliverGridDelegateWithFixedCrossAxisCount, mainAxisExtent, hingga Switch.adaptive adalah fitur bawaan Flutter SDK (sudah ada sejak Flutter 2.x).
 
-    Alasan Teknis:
+    Tidak ada third-party package atau API eksperimental yang dapat rusak di versi Flutter stabil saat ini.
+
+    2. Responsivitas di Bawah 600px (Layar HP Sempit)
+    Responsif: Breakpoint constraints.maxWidth >= 700 memastikan bahwa pada lebar layar di bawah 600px, crossAxisCount otomatis bernilai 1. Kartu akan membentang mengikuti lebar layar HP.
+
+    Catatan Kecil: Penggunaan nilai tinggi tetap mainAxisExtent: 90 pada 1 kolom bekerja sangat baik untuk teks pendek standar. Namun, di layar HP yang sangat sempit (misal 320px–360px), jika isi kartu bertambah panjang, margin/padding di dalam kartu perlu diperhatikan agar teks tidak terpotong secara vertikal.
+
+    3. Dampak Terhadap Aksesibilitas (A11y)
+    Kelebihan (Meningkat):
+
+    Mengatasi Bug Font Scaling: Dengan mainAxisExtent, kartu tidak akan gepeng jika rasio layar berubah.
+
+    Informasi Grid: GridView memberikan konteks struktur posisi item yang jelas bagi pengguna penyandang tunanetra saat menggunakan Screen Reader (TalkBack/VoiceOver).
+
+    Potensi Masalah (Pencegahan Overflow):
+
+    Mengunci tinggi kartu (mainAxisExtent: 90) dapat memicu overflow vertikal jika pengguna mengaktifkan Large Text / Dynamic Type hingga 150%–200% di pengaturan aksesibilitas HP.
+
+    Solusi Penyelamat Aksesibilitas: Di dalam DashboardCard, judul dibatasi maxLines: 2 dan overflow: TextOverflow.ellipsis agar tata letak tidak rusak saat teks membesar.
 
     Bukti Verifikasi:
 
+    ![Tampilan Verifikasi](screenshots/6_verification.png)
+
 4. Dokumentasi
+
+## Refactoring Challenge
+1. Ekstrak kartu informasi menjadi widget reusable (misal InfoCard) yang menerima title dan value, sehingga tidak ada duplikasi widget.
+
+    Memodifikasi kode program sehingga menjadi widget reusable, yang dimana sudah diterapkan pada class DashboardCard. Untuk soal ini, saya ubah deklarasi dan inisialisasi Dashboard menjadi infoCard
+
+    class InfoCard extends StatelessWidget {
+        const InfoCard({required this.title, required this.value, super.key});
+        final String title;
+        final String value;
+    }
+
+2. Ganti warna dan ukuran yang di-hardcode dengan Theme.of(context) agar mengikuti tema terang/gelap secara otomatis.
+
+    Pada soal ini, sudah diterapkan untuk Theme.of(context) agar mengikuti tema terang dan gelap
+
+    Contoh kode program:
+    color: Theme.of(context).colorScheme.primaryContainer,
+    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+        ),
+
+3. Pindahkan breakpoint ke satu konstanta bernama (misal const kWideBreakpoint = 700;) agar hanya didefinisikan satu kali.
+
+    Pada soal ini, saya membuat variabel baru untuk mendefinisikan minimal lebar pixel untuk memecah jumlah column.
+    
+    Kode program:
+    final triggerWideBreakpoint = 700;
+    final columns = constraints.maxWidth >= triggerWideBreakpoint ? 2 : 1;
+
+4. Jalankan flutter analyze dan pastikan tidak ada error maupun warning baru.
+
+    Bukti screenshot:
+    ![Tampilan Perintah Flutter Analyze](screenshots/6_flutterAnalyze.png)
