@@ -383,3 +383,23 @@ Hasil flutter test:
 5. Struktur widget dapat dijelaskan saat code review.
 6. Screenshot, folder test/, dan README sudah tersimpan pada folder tugas Week 2.
 
+## Refleksi
+1. Apa perbedaan cara berpikir imperative dan declarative saat membangun UI?
+
+    Jawaban:
+    Perbedaan cara berpikir imperative dan declarative terletak pada prinsip utamanya. Cara berpikir imperative yakni berfokus pada langkah langkahnya. Sebagai contoh mengubah UI secara manual satu per satu. Sedankgan cara berpikir declarative berfokus pada hasil akhir. Sebagai contoh pada flutter, ketika state berubah, maka Ui harus dibangun ulang.
+
+2. Kapan Expanded membantu dan kapan penggunaannya justru menghasilkan layout error?
+
+    Jawaban:
+    Expanded membantu penerapan layout-ing UI ketika Row atau Column memaksa agar child nya itu mengisi widget di bawahnya ketika terlalu panjang, sehingga mencegah overflow. Sebaliknya, ketika Gridview di dalamnya terdapat expanded, maka widget akan dapat discroll sampai tak terhingga karena tidak ada batasan. 
+
+3. Bagaimana breakpoint dan theme memengaruhi pengalaman pengguna?
+
+    Jawaban:
+    Breakpoint dan theme dapat memengaruhi pengalaman pengguna karena pada dasarnya breakpoint memberikan opsi pada tampilan berdasarkan resolusi perangkat pengguna, sehingga lebih fleksibel untuk mengatur Row dan Column yang ditampilan, serta memberikan opsi bagi pengguna yang lebih menyukai tema yang gelap maupun terang untuk theme.
+
+4. Apa yang Anda verifikasi dari rekomendasi AI setelah tugas inti selesai?
+
+    Jawaban:
+    Verifikasi dari rekomendasi AI yakni untuk menyesuaikan kode program dengan yang ada di jobsheet, sehingga tidak ada langkah yang terlewat, serta analisis makna kode program, serta penulisan kode yang bersih.
