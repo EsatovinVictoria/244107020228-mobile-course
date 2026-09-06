@@ -342,4 +342,44 @@ Menggunakan AI (Gemini) untuk membandingkan dua alternatif tata letak.
 4. Jalankan flutter analyze dan pastikan tidak ada error maupun warning baru.
 
     Bukti screenshot:
+
     ![Tampilan Perintah Flutter Analyze](screenshots/6_flutterAnalyze.png)
+
+## Testing Dasar
+Menambahkan widget test, kemudian menjalankan flutter test
+
+Hasil flutter test:
+
+![Hasil Flutter test](screenshots/6_flutterTest.png)
+
+## Checklist Verifikasi
+1. flutter analyze tidak menghasilkan error.
+
+    Screenshot:
+
+    ![Tampilan Perintah Flutter Analyze](screenshots/6_flutterAnalyze.png)
+
+2. flutter test lulus semua widget test responsif.
+
+    Screenshot:
+
+    ![Hasil Flutter test](screenshots/6_flutterTest.png)
+
+3. Aplikasi dapat dijalankan pada ukuran layar sempit dan lebar.
+
+    Screenshot:
+    Layar sempit:
+
+    ![Layar Sempit](screenshots/6_tampilan_iPhoneXR_414x896.png)
+
+    Layar lebar:
+
+    ![Layar Lebar](screenshots/6_tampilaniPad_1024x1366.png)
+
+4. Dark mode memiliki kontras dan teks yang terbaca.
+
+    ![Dark Mode Terbaca](screenshots/6_verification.png)
+
+5. Struktur widget dapat dijelaskan saat code review.
+6. Screenshot, folder test/, dan README sudah tersimpan pada folder tugas Week 2.
+
