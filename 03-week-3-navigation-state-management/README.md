@@ -319,3 +319,57 @@ Pada praktikum ini, terlihat pola bahwa ref.watch bertugas untuk mengawasi bagia
         Bukti screenshot:
 
     ![Flutter Test](screenshots/ai_flutterTes.png)
+
+## Refactor Challenge
+
+1. Pisahkan widget bar ToDo menjadi TodoTile tersendiri agar build lebih pendek dan mudah diuji.
+
+2. Ekstrak logika filter (misal tampilkan hanya yang belum selesai) menjadi Provider turunan yang membaca todoListProvider.
+
+    ![Refactor Challenge 2](screenshots/refactor_2.png)
+
+3. Integrasikan aplikasi ToDo dengan GoRouter: / untuk daftar dan /stats untuk halaman statistik, tambahkan NavigationBar untuk berpindah.
+
+    ![Refactor Challenge 3](screenshots/refactor_3.png)
+
+4. Flutter Test
+
+    ![Refactor Challenge Flutter Test](screenshots/refactor_flutterTes.png)
+
+5. Flutter Analyze
+
+    ![Refactor Challenge Flutter Analyze](screenshots/refactor_flutterAnalyze.png)
+
+## Mini Project
+
+1. Minimal 2 halaman dengan GoRouter: daftar tugas, halaman detail/statistik.
+
+2. State dikelola Riverpod (Notifier), UI menggunakan ConsumerWidget.
+
+3. Tambahkan fitur simulasi asinkron dengan AsyncValue: state loading, error, dan success tampil dengan benar.
+
+4. Sertakan minimal 1 unit/widget test yang lulus.
+
+5. Kerjakan bagian AI Challenge dan dokumentasikan prompt, hasil AI, perbaikan, serta alasan keputusan teknis Anda.
+
+6. Push ke repository portfolio pada folder 03-week-3-navigation-state-management/ dengan struktur lib/, test/, README.md, dan screenshots/. README menjelaskan tujuan, fitur utama, stack teknologi, cara menjalankan, dan hasil yang dicapai.
+
+    Semua tahapan untuk Mini Project ini telah dilakukan sesuai dengan tahapan di file Readme ini dan kode program pada folder 03-week-3-navigation-state-management.
+
+## Refeksi
+
+1. Kapan setState masih cukup, dan kapan state harus naik ke Riverpod?
+
+    Jawaban: setState digunakan jika data hanya ada untuk satu widget visual saja dan tidak mempengaruhi layar lain. Sedangkan state harus naik ke Riverpod jika data tersebut digunakan oleh banyak widget visual.
+
+2. Apa perbedaan context.go dan context.push, dan kapan masing-masing tepat digunakan?
+
+    Jawaban : Perbedaan utama kedua metode ini terletak pada cara pengelolaan navigation stack. Perintah context.go bekerja dengan mengganti seluruh tumpukan halaman sesuai dengan skema URL yang dituju. Metode ini tepat digunakan untuk navigasi utama aplikasi. Sebaliknya, context.push bekerja dengan menumpuk halaman baru di atas halaman yang sedang aktif tanpa menghapus halaman di bawahnya. Metode ini ideal digunakan untuk membuka layar turunan, seperti halaman detail tugas atau form pengeditan, di mana pengguna diharapkan dapat kembali ke layar sebelumnya menggunakan tombol kembali.
+
+3. Bagaimana AsyncValue mencegah bug dibanding tiga boolean terpisah?
+
+    Jawaban: Pendekatan yang mengandalkan tiga variabel status terpisah rentan menimbulkan bug logika invalid state. AsyncValue dari Riverpod memecahkan masalah ini dengan menerapkan arsitektur sealed class, yang menjamin bahwa state aplikasi hanya bisa berada pada satu dari tiga kondisi sah pada satu waktu yakni antara AsyncLoading, AsyncError, atau AsyncData.
+
+4. Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?
+
+    Jawaban: Bagian dari hasil AI yang saya perbaiki terletak pada file test yang dimana dari AI nya sendiri megenerate sintaks yang sudah tidak ada. Contohnya ketika mendeklarasikan class bernama FixedRandom yang mengextends Random, namun harusnya menggunakan implements Random dan extends Random. Juga terdapat kesalahan sintaks untuk state.uri.pathname, yang seharusnya menggunakan state.uri.path.

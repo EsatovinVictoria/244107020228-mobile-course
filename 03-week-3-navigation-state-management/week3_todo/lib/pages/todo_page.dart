@@ -15,7 +15,7 @@ class TodoPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text('ToDo (${uncompletedTodos.length} belum selesai)')),
       body: todos.isEmpty
-          ? const Center(child: Text('Belum Ada Tugas!'))
+          ? const Center(child: Text('Belum ada tugas'))
           : ListView.builder(
               itemCount: todos.length,
               itemBuilder: (context, index) {
