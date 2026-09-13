@@ -10,8 +10,10 @@ class TodoPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final todos = ref.watch(todoListProvider);
 
+    final uncompletedTodos = ref.watch(uncompletedTodoListProvider);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('ToDo Riverpod')),
+      appBar: AppBar(title: Text('ToDo (${uncompletedTodos.length} belum selesai)')),
       body: todos.isEmpty
           ? const Center(child: Text('Belum Ada Tugas!'))
           : ListView.builder(
