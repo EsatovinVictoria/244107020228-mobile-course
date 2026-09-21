@@ -47,5 +47,20 @@ Uji tigas skenario
 
     Setelah pengujian selesai, baseUrl dikembalikan ke URL yang benar agar aplikasi dapat kembali terhubung ke API dan mengambil data post seperti semula.
 
-    ![Tampilan Error](screenshots/p2_tampilanUrlSalah.png)
+    ![Tampilan Error](screenshots/p2_tampilanUrlSalah.png) 
 
+## Praktikum 3: Pagination dasar
+
+Membuat repositori paginated
+
+Membuat notifier dengan state halaman
+
+Membuat UI infinite Scroll
+
+Berikut merupakan tampilan ketika diterapkan pagination.
+
+![Tampilan Pagination](screenshots/p3_pagiantion1.png)
+
+![Tampilan Pagination](screenshots/p3_pagiantion2.png)
+
+Terlihat pada aplikasi yakni pagination telah diterapkan dengan bukti bahwa ketika sebelum discroll hingga batas bawah, maka aplikasi tidka memunculkan 10 item berikutnya, dan hanya menampilkan indikator loading. Setelah discroll hingga batas bawah, maka aplikasi memunculkan 10 item berikutnya.
