@@ -463,4 +463,19 @@ Berikut merupakan tampilan aplikasi setelah dieksekusi oleh Copilot.
 
     ![Flutter Analyze 2](screenshots/ai_flutterAnalyze2.png)
 
+
+## Refactor & Testing
+
+1. Ekstrak widget baris post menjadi PostTile tersendiri agar ListView.builder pendek dan mudah diuji.
+
+    Perubahan kode program ditunjukkan pada penambahan folder dan file baru yakni post_tile.dart. Hal ini bertujuan agar widget post dapat digunakan di halaman lain seperti halaman detail post.
+
+    Berikut merupakan tampilan awal untuk aplikasi saat ini.
+
+    ![Tampilan awal](screenshots/refactor_1.png)
+
+2. Pindahkan friendlyErrorMessage ke file lib/data/network_errors.dart agar bisa dipakai ulang halaman paged dan non-paged.
+
     
+
+3. Tambahkan halaman detail post dengan GoRouter (/post/:id) yang menampilkan title dan body lengkap, state detail diambil dari list yang sudah dimuat atau via repository bila langsung dibuka.
