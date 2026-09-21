@@ -6,10 +6,12 @@ class PostTile extends StatelessWidget {
     super.key,
     required this.post,
     this.onTap,
+    this.showBody = false,
   });
 
   final Post post;
   final VoidCallback? onTap;
+  final bool showBody;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,13 @@ class PostTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
+      subtitle: showBody
+          ? Text(
+              post.body,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            )
+          : null,
     );
   }
 }
