@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/providers.dart';
 import '../widgets/post_tile.dart';
+import '../data/network_errors.dart';
 
 class PostListPage extends ConsumerWidget {
   const PostListPage({super.key});

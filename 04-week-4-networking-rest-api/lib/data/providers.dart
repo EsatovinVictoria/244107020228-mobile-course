@@ -71,7 +71,7 @@ final postListProvider =
       retry: (retryCount, error) => null
   );
 
-Future<List<Post>> readPostOnce(ProviderContainer container) {
+Future<List<Post>> readPostsOnce(ProviderContainer container) {
   final completer = Completer<List<Post>>();
   final sub = container.listen<AsyncValue<List<Post>>>(
     postListProvider,
@@ -101,29 +101,6 @@ Future<Object?> readPostsErrorOnce(ProviderContainer container) {
     fireImmediately: true,
   );
   return completer.future.whenComplete(sub.close);
-}
-
-String friendlyErrorMessage(Object error) {
-  if(error is DioException) {
-    switch(error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return 'Koneksi lambat. Periksa internet anda';
-      case DioExceptionType.connectionError:
-        return 'Tidak dapat terhubung dengan server. Periksa internet anda';
-      case DioExceptionType.badResponse:
-        final code = error.response?.statusCode;
-        if (code == 404) return 'Data tidak ditemukan (404)';
-        if (code == 401 || code == 403) {
-          return 'Akses ditolak ($code). Perika kredensial anda.';
-        }
-        return 'Server bermasalah ($code). Coba lagi nanti';
-      default:
-        return 'Terjadi kesalahan jaringan. Coba lagi';
-    }
-  }
-  return 'Terjadi kesalahan tak terduga';
 }
 
 /// Mengubah error jaringan menjadi pesan yang dapat dipahami pengguna.

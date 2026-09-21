@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/paged_posts.dart';
 import '../data/providers.dart';
 import '../widgets/post_tile.dart';
+import '../data/network_errors.dart';
 
 class PagedPostPage extends ConsumerStatefulWidget {
   const PagedPostPage({super.key});
