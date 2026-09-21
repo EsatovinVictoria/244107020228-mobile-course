@@ -503,3 +503,40 @@ Berikut merupakan bukti untuk testing flutter test dan flutter analyze
 ![Flutter Test](screenshots/refactor_flutterTest.png)
 
 ![Flutter Analyze](screenshots/refactor_flutterAnalyze.png)
+
+
+## Mini Project
+
+1. Ambil data dari API dummy (JSONPlaceholder /posts atau API publik lain tanpa key). Tampilkan ke UI melalui repository + Riverpod.
+
+2. Terapkan Dio terpusat (base URL, timeout, interceptor logging) dan model fromJson aman null.
+
+3. Tampilkan keempat state: loading, error (+ tombol retry), empty, success.
+
+4. Tambahkan pagination dasar (infinite scroll, 10 item per halaman) dengan guard request ganda.
+
+5. Sertakan minimal 2 test yang lulus (1 unit test model/error mapping + 1 test provider dengan repository palsu).
+
+6. Kerjakan bagian AI Challenge dan dokumentasikan prompt, hasil AI, perbaikan, serta alasan keputusan teknis Anda di docs/.
+
+7. Push ke repository portfolio pada folder 04-week-4-networking-rest-api/ dengan struktur lib/, test/, docs/, README.md, dan screenshots/. README menjelaskan tujuan, fitur utama, stack teknologi, cara menjalankan, dan hasil yang dicapai.
+
+## Refleksi
+
+1. Mengapa UI dilarang memanggil Dio langsung? Apa yang rusak jika aturan ini dilanggar?
+
+    Jawaban: UI tidak seharusnya memanggil Dio secara langsung karena UI bertanggung jawab untuk menampilkan data dan menerima interaksi pengguna, sedangkan proses pengambilan data dari API merupakan tanggung jawab repository. Pada aplikasi ini, UI memperoleh state melalui Riverpod Provider, kemudian Provider menggunakan PostRepository atau CommentRepository untuk mengakses API melalui Dio. Jika Dio dipanggil langsung dari UI, kode tampilan akan bercampur dengan logika akses data. Akibatnya kode menjadi lebih sulit dipelihara, digunakan kembali, dan diuji. Pengujian juga menjadi lebih sulit karena widget akan bergantung langsung pada koneksi internet. Dengan repository, repository asli dapat diganti dengan FakePostRepository saat testing sehingga pengujian dapat dilakukan tanpa internet.
+
+2. Kapan pagination client-side cukup, dan kapan harus mengandalkan pagination server (_page/_limit)?
+
+    Jawaban: Pagination client-side cukup digunakan apabila jumlah data relatif sedikit dan seluruh data masih aman untuk diambil sekaligus. Data dapat dimuat satu kali dari server kemudian dibagi menjadi beberapa bagian pada aplikasi. Cara ini sederhana, tetapi menjadi kurang efisien ketika jumlah data sangat banyak karena seluruh data tetap harus dikirim dan disimpan pada perangkat. Pagination server-side lebih sesuai untuk jumlah data yang besar. Aplikasi hanya meminta data yang sedang diperlukan menggunakan parameter seperti _page dan _limit.
+
+3. Bagaimana exception repository berubah menjadi AsyncError tanpa try/catch di setiap widget? Kapan try/catch eksplisit tetap dibutuhkan?
+
+    Jawaban: Riverpod dapat menangani exception dari proses asynchronous melalui AsyncNotifier atau provider asynchronous. Apabila repository melempar exception, misalnya DioException, exception tersebut dapat diteruskan oleh Provider dan direpresentasikan sebagai AsyncError. Oleh karena itu, widget tidak perlu melakukan try/catch sendiri dan cukup menangani state melalui AsyncValue. try/catch eksplisit tetap diperlukan apabila aplikasi membutuhkan tindakan khusus ketika terjadi error, misalnya mempertahankan data lama ketika pagination gagal, mengubah state tertentu, melakukan logging, atau menjalankan proses tambahan. Contohnya terdapat pada loadNextPage(), di mana data post yang sudah berhasil dimuat perlu tetap dipertahankan walaupun request halaman berikutnya mengalami kegagalan.
+
+4. Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?
+
+    Jawaban: Hasil AI tidak digunakan secara langsung tanpa verifikasi. Beberapa bagian diperbaiki agar sesuai dengan struktur dan kebutuhan aplikasi. Pertama, konfigurasi timeout yang awalnya diletakkan pada pemanggilan repository dipindahkan ke api_client.dart agar konfigurasi Dio seperti baseUrl, connectTimeout, sendTimeout, dan receiveTimeout berada pada satu tempat.
+
+    Kedua, fungsi friendlyErrorMessage() dipisahkan dari providers.dart ke network_errors.dart agar penanganan error dapat digunakan kembali oleh halaman paged maupun non-paged. Ketiga, helper pengujian disesuaikan dari readPostOnce() menjadi readPostsOnce() agar sesuai dengan kode test yang digunakan. Pengujian model dari AI yang hanya memeriksa field yang hilang juga dilengkapi dengan pengujian terhadap field bernilai null.
