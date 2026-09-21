@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:week4_api/pages/paged_post_page.dart';
+import 'router.dart';
 
 void main() => runApp(const ProviderScope(child: MyApp()));
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        title: 'Week 4 - REST API',
-        theme: ThemeData(
-            colorSchemeSeed: Colors.indigo, useMaterial3: true),
-        home: const PagedPostPage(),
-      );
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      routerConfig: router,
+    );
+  }
 }

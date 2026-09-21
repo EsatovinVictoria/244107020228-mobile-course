@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/providers.dart';
 import '../widgets/post_tile.dart';
 import '../data/network_errors.dart';
+import 'package:go_router/go_router.dart';
 
 class PostListPage extends ConsumerWidget {
   const PostListPage({super.key});
@@ -57,6 +58,12 @@ class PostListPage extends ConsumerWidget {
                 return PostTile(
                   post: post,
                   showBody: true,
+                  onTap: () {
+                    context.push(
+                      '/post/${post.id}',
+                      extra: post,
+                    );
+                  },
                 );
               },
             ),

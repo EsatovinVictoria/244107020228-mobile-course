@@ -129,4 +129,8 @@ String commentErrorMessage(Object error) {
   return 'Terjadi kesalahan tak terduga. Coba lagi.';
 }
 
-
+final postDetailProvider =
+    FutureProvider.family<Post, int>((ref, postId) async {
+  final repository = ref.watch(postRepositoryProvider);
+  return repository.fetchPost(postId);
+});

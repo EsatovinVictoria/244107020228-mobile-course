@@ -476,6 +476,30 @@ Berikut merupakan tampilan aplikasi setelah dieksekusi oleh Copilot.
 
 2. Pindahkan friendlyErrorMessage ke file lib/data/network_errors.dart agar bisa dipakai ulang halaman paged dan non-paged.
 
-    
+    Fungsi friendlyErrorMessage() yang sebelumnya berada pada providers.dart dipindahkan ke file baru lib/data/network_errors.dart. Fungsi tersebut bertugas mengubah error dari Dio, seperti timeout, connection error, maupun HTTP error, menjadi pesan yang lebih mudah dipahami oleh pengguna.
+
+    Pemisahan ini dilakukan agar logika penanganan error tidak bercampur dengan konfigurasi provider dan dapat digunakan kembali oleh berbagai bagian aplikasi. Halaman paged maupun non-paged dapat menggunakan fungsi friendlyErrorMessage() yang sama tanpa mendefinisikan logika penanganan error secara berulang.
+
+    Perubahan ini tidak menghasilkan perubahan tampilan aplikasi secara langsung karena hanya melakukan restrukturisasi pada kode penanganan error.
 
 3. Tambahkan halaman detail post dengan GoRouter (/post/:id) yang menampilkan title dan body lengkap, state detail diambil dari list yang sudah dimuat atau via repository bila langsung dibuka.
+
+    Navigasi aplikasi direfactor menggunakan GoRouter dengan menambahkan route /post/:id. Setiap PostTile dapat ditekan untuk membuka halaman detail sesuai dengan ID post yang dipilih. Halaman detail menampilkan title dan body secara lengkap sehingga informasi yang sebelumnya ditampilkan secara ringkas pada daftar post dapat dilihat secara keseluruhan.
+
+    Data detail post menggunakan data Post yang sudah tersedia pada halaman daftar apabila pengguna membuka detail melalui PostTile. Dengan cara ini, aplikasi tidak perlu melakukan request API kembali untuk data yang sudah tersedia. Apabila route /post/:id dibuka secara langsung dan data post belum tersedia dari halaman sebelumnya, aplikasi akan mengambil data berdasarkan ID melalui PostRepository.
+
+    Dengan mekanisme tersebut, halaman detail dapat bekerja baik melalui navigasi dari daftar post maupun ketika route detail dibuka secara langsung.
+
+    Berikut merupakan tampilan awal aplikasi.
+
+    ![Tampilan awal](screenshots/refactor_3_tampilanAwal.png)
+
+    Dan berikut merupakan tampilan aplikasi setelah ditekan untuk salah satu item untuk menuju pada page detail.
+
+    ![Tampilan setelah ditekan](screenshots/refactor_3_tampilanDetail.png)
+
+Berikut merupakan bukti untuk testing flutter test dan flutter analyze
+
+![Flutter Test](screenshots/refactor_flutterTest.png)
+
+![Flutter Analyze](screenshots/refactor_flutterAnalyze.png)
