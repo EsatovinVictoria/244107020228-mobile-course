@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:week4_api/pages/paged_post_page.dart';
-import 'pages/post_list_page.dart';
 
 void main() => runApp(const ProviderScope(child: MyApp()));
 
