@@ -27,5 +27,22 @@ Setelah dilakukan hot restart, maka tampilan aplikasi akan tetap pada mode dark 
 
 ![Tampilan Setting](screenshots/p1_tampilanSetelahHotRestart.png)
 
+## Praktikum 2: SQLite dan repository catatan
 
+Membuat model catatan.
 
+Membuat pembuka database pada db.dart.
+
+Membuat repository sebagai satu-satunya pintu akses data yang terdapat
+pada note_repository.dart.
+
+Membuat halaman catatan offline yang mengambil data melalui
+notesProvider dan NoteRepository.
+
+Berikut merupakan tampilan catatan yang telah tersimpan pada SQLite.
+
+![Tampilan Offline Notes](screenshots/p2_tampilanOfflineNotes.png)
+
+Catatan yang sebelumnya ditambahkan tetap tersimpan dan dapat
+ditampilkan kembali karena data disimpan pada SQLite melalui
+NoteRepository.

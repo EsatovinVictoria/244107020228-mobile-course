@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'data/prefs.dart';
 import 'pages/settings_page.dart';
+import 'pages/notes_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,7 @@ class MyApp extends ConsumerWidget {
       themeMode: (darkMode.value ?? false)
           ? ThemeMode.dark
           : ThemeMode.light,
-      home: const SettingsPage(),
+      home: const NotesPage(),
     );
   }
 }
