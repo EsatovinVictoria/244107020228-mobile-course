@@ -211,4 +211,18 @@ Saat Force Offline diaktifkan, catatan yang telah tersimpan tetap dapat ditampil
 
 2. Pindahkan logika cache posts dan syncNotes ke file lib/data/sync.dart agar repository tetap fokus pada CRUD.
 
+    Berikut merupakan tampilan Posts ketika data berhasil ditampilkan dari cache SQLite.
+
+    ![Tampilan Posts dari Cache](screenshots/refactor_2_postsCacheFirstOffline.png)
+
+    Berikut merupakan tampilan proses sinkronisasi note yang sebelumnya memiliki status belum tersinkron.
+
+    ![Proses Sinkronisasi](screenshots/refactor_2_offlineNotesSebelumSync.png)
+
+    Berikut merupakan tampilan aplikasi setelah proses sinkronisasi berhasil, ditandai dengan nilai Dirty Notes kembali menjadi 0.
+
+    ![Tampilan Setelah Sinkronisasi](screenshots/refactor_2_offlineNotesSetelahSync.png)
+
+
 3. Tambahkan halaman detail catatan dengan GoRouter (/note/:id) yang membaca dari repository lokal, bukan dari state halaman list.
+

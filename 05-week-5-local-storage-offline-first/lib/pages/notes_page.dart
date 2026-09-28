@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/repositories/note_repository.dart';
 import '../data/local/note.dart';
-import '../data/sync_service.dart';
+import '../data/sync.dart';
 import '../providers/offline_provider.dart';
 import 'posts_page.dart';
 import '../widgets/note_tile.dart';
