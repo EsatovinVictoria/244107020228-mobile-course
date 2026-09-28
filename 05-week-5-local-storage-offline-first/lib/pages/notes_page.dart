@@ -7,6 +7,7 @@ import '../data/sync.dart';
 import '../providers/offline_provider.dart';
 import 'posts_page.dart';
 import '../widgets/note_tile.dart';
+import 'package:go_router/go_router.dart';
 
 final noteRepositoryProvider = Provider<NoteRepository>(
   (ref) => NoteRepository(),
@@ -210,6 +211,9 @@ class NotesPage extends ConsumerWidget {
                                 final note = notes[index];
                                 return NoteTile(
                                   note: note,
+                                  onTap: () {
+                                    context.push('/note/${note.id}');
+                                  },
                                 );
                               },
                             ),

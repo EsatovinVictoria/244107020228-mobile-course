@@ -226,3 +226,41 @@ Saat Force Offline diaktifkan, catatan yang telah tersimpan tetap dapat ditampil
 
 3. Tambahkan halaman detail catatan dengan GoRouter (/note/:id) yang membaca dari repository lokal, bukan dari state halaman list.
 
+    Beirkut merupakan tampilan detail untuk suatu notes dengan implementasi GoRouter.
+
+    ![Tampilan Detail Notes](screenshots/refactor_3_tampilanDetail.png)
+
+Berikut merupakan hasil testing nya
+
+![Tampilan Detail Notes](screenshots/testing_flutterTest.png)
+
+![Tampilan Detail Notes](screenshots/testing_flutterAnalyze.png)
+
+
+## Mini Project
+
+1. Preferensi: toggle tema gelap/terang + waktu terakhir dibuka via SharedPreferences.
+2. CRUD catatan persisten via SQLite (sqflite) melalui repository lokal + Riverpod; daftar diurutkan updated_at terbaru.
+3. Offline-first: cache-first untuk data bacaan, dirty flag + syncNotes untuk tulisan, dan aturan konflik eksplisit yang didokumentasikan.
+4. Buktikan mode pesawat: screenshot daftar catatan saat offline dan badge dirty sebelum/sesudah sync.
+5. Sertakan minimal 2 test yang lulus (1 unit test model + 1 test provider dengan repository palsu).
+6. Kerjakan bagian AI Challenge dan dokumentasikan prompt, tabel perbandingan storage, keputusan final, serta alasan teknis Anda di docs/.
+7. Push ke repository portfolio pada folder 05-week-5-local-storage-offline-first/ dengan struktur lib/, test/, docs/, README.md, dan screenshots/. README menjelaskan tujuan, fitur utama, stack teknologi, cara menjalankan, dan hasil yang dicapai.
+
+## Refleksi
+
+1. Mengapa daftar catatan tidak boleh disimpan di SharedPreferences? Apa yang rusak jika aturan ini dilanggar?
+
+    Jawaban: Karena SharedPreferences cocok untuk data key-value sederhana, bukan koleksi catatan. Jika dipaksakan, proses pencarian, update, filter, dan sinkronisasi banyak catatan menjadi sulit dan rapuh.
+
+2. Kapan cache-first cukup, dan kapan Anda membutuhkan strategi lain (misalnya network-first untuk data harga real-time)?
+
+    Jawaban: Cache-first cocok saat aplikasi harus tetap menampilkan data ketika offline dan data tidak harus selalu terbaru. Untuk data yang sangat cepat berubah, seperti harga real-time, lebih cocok network-first agar data terbaru diprioritaskan.
+
+3. Bagaimana dirty flag berubah menjadi antrean sync tanpa memblokir UI? Kapan antrean terpisah (tabel outbox) menjadi perlu?
+
+    Jawaban: Data yang berubah diberi dirty = true, lalu proses sync mengambil data dirty di background tanpa memblokir UI. Tabel outbox diperlukan jika operasi sync semakin kompleks, misalnya banyak operasi create, update, dan delete yang harus disimpan serta dikirim secara berurutan
+
+4. Bagian mana dari rekomendasi AI yang Anda tolak, dan mengapa?
+
+    Jawaban: Saya menolak penambahan tabel tags dan note_tags karena aplikasi saat ini belum memiliki fitur tag. Untuk kebutuhan sekarang, tabel notes dengan updated_at dan dirty sudah cukup.
