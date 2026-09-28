@@ -46,3 +46,54 @@ Berikut merupakan tampilan catatan yang telah tersimpan pada SQLite.
 Catatan yang sebelumnya ditambahkan tetap tersimpan dan dapat
 ditampilkan kembali karena data disimpan pada SQLite melalui
 NoteRepository.
+
+## Praktikum 3: Cache-first dan antrean sync
+
+Menggunakan endpoint minggu 4 GET /posts untuk JSON placeholder
+
+Berikut merupakan tampilan catatan setelah diambil data melalui API GET /posts pertama kali, namun tidak terhubung dengan internet.
+
+![Tampilan Offline Notes](screenshots/p3_tampilanKosong.png)
+
+Berikut merupakan tampilannya ketika ditekan refresh dan terhubung dengan internet.
+
+![Tampilan Offline Notes](screenshots/p3_tampilanListAPI.png)
+
+List tersebut tetap tersimpan di SQLite meskipun tidak terhubung dengan internet, dan ketika dilakukan hot restart pada aplikasi nya.
+
+![Tampilan Offline Notes](screenshots/p3_tampilanAplikasiModePesawat.png)
+
+![Tampilan Offline Notes](screenshots/p3_tampilanAplikasiSetelahRestart.png)
+
+
+Menyinkronisasikan catatan kotor (dirty) 
+
+Berikut merupakan tampilan badge dirty notes beserta jumlah yang masih dirty.
+
+![Tampilan Offline Notes](screenshots/p3_tampilanBadgeDirtyNotesSebelumSync.png)
+
+Berikut merupakan tampilannya setelah dilakukan sync.
+
+![Tampilan Offline Notes](screenshots/p3_tampilanBadgeDirtyNotesSetelahSync.png)
+
+
+Simulasi offline determinisik
+
+Berikut merupakan tampilan ketika force offline dimatikan.
+
+![Tampilan Offline Notes](screenshots/p3_tampilanForceOfflineMati.png)
+
+Berikut merupakan tampilan ketika force offline dinyalakan.
+
+![Tampilan Offline Notes](screenshots/p3_tampilanForceOfflineNyala.png)
+
+Berikut tampilan ketika dilakukan penambahan notes sebelum sync (Force offline mati).
+
+![Tampilan Offline Notes](screenshots/p3_tampilanForceOfflineSebelumSync.png)
+
+Dan berikut merupaakn tampilan ketika force Offline dimatikan dan dilakukan sync.
+
+![Tampilan Offline Notes](screenshots/p3_tampilanForceOfflineSetelahSync.png)
+
+Saat Force Offline diaktifkan, catatan yang telah tersimpan tetap dapat ditampilkan dan catatan baru dapat disimpan ke SQLite dengan status dirty. Setelah koneksi disimulasikan kembali online dan proses sinkronisasi dijalankan, nilai dirty berubah dari 2 menjadi 0.
+
