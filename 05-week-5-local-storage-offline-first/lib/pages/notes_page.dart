@@ -6,6 +6,7 @@ import '../data/local/note.dart';
 import '../data/sync_service.dart';
 import '../providers/offline_provider.dart';
 import 'posts_page.dart';
+import '../widgets/note_tile.dart';
 
 final noteRepositoryProvider = Provider<NoteRepository>(
   (ref) => NoteRepository(),
@@ -207,17 +208,8 @@ class NotesPage extends ConsumerWidget {
                               itemCount: notes.length,
                               itemBuilder: (context, index) {
                                 final note = notes[index];
-
-                                return ListTile(
-                                  title: Text(note.title),
-                                  subtitle: Text(note.body),
-                                  trailing: note.dirty
-                                      ? const Icon(
-                                          Icons.cloud_off,
-                                        )
-                                      : const Icon(
-                                          Icons.cloud_done,
-                                        ),
+                                return NoteTile(
+                                  note: note,
                                 );
                               },
                             ),

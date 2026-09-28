@@ -201,3 +201,14 @@ Saat Force Offline diaktifkan, catatan yang telah tersimpan tetap dapat ditampil
 
         SharedPreferences untuk preferensi dan sqflite untuk catatan. Ini sesuai implementasi project saat ini.
 
+## Refactoring, Testing, dan error umum
+
+1. Ekstrak baris catatan menjadi widget NoteTile tersendiri yang menampilkan badge "belum tersinkron" bila dirty == true.
+
+    Berikut merupakan tampilan aplikasi ketika terdapat suatu note yang belum tersinkron.
+
+    ![Tampilan Offline Notes](screenshots/refactor_1_tampilanBelumTersinkron.png)
+
+2. Pindahkan logika cache posts dan syncNotes ke file lib/data/sync.dart agar repository tetap fokus pada CRUD.
+
+3. Tambahkan halaman detail catatan dengan GoRouter (/note/:id) yang membaca dari repository lokal, bukan dari state halaman list.
