@@ -6,6 +6,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../routes.dart';
+import '../data/api_errors.dart';
+
 const _campusTopic = 'pengumuman-kampus';
 
 @pragma('vm:entry-point')
@@ -28,8 +31,8 @@ class PushService {
     required this.api,
     FirebaseMessaging? messaging,
     FlutterLocalNotificationsPlugin? localNotifications,
-  })  : _messaging = messaging ?? FirebaseMessaging.instance,
-        _local = localNotifications ?? FlutterLocalNotificationsPlugin();
+  }) : _messaging = messaging ?? FirebaseMessaging.instance,
+       _local = localNotifications ?? FlutterLocalNotificationsPlugin();
 
   final Dio api;
   final FirebaseMessaging _messaging;
@@ -74,7 +77,8 @@ class PushService {
     // It is harmless on older Android versions and a no-op on iOS.
     await _local
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
 
     return settings.authorizationStatus == AuthorizationStatus.authorized ||
@@ -105,21 +109,28 @@ class PushService {
     }
   }
 
-  Future<void> _registerDevice(
-    String token, {
-    required String source,
-  }) async {
+  Future<void> _registerDevice(String token, {required String source}) async {
     fcmTokenPreview.value = _shortenToken(token);
     fcmTokenSource.value = source;
+    fcmBackendStatus.value = 'Mengirim token ke backend...';
 
-    await api.post<void>(
-      '/devices',
-      data: <String, String>{
-        'token': token,
-        'platform': defaultTargetPlatform.name,
-      },
-    );
-    debugPrint('Token FCM [$source] berhasil didaftarkan ke backend.');
+    try {
+      await api.post<void>(
+        '/devices',
+        data: <String, String>{
+          'token': token,
+          'platform': defaultTargetPlatform.name,
+        },
+      );
+
+      fcmBackendStatus.value = 'Registrasi token diterima oleh backend.';
+      debugPrint('Registrasi token FCM berhasil [$source].');
+    } catch (error) {
+      final message = apiErrorMessage(error);
+
+      fcmBackendStatus.value = message;
+      debugPrint('Registrasi token FCM gagal [$source]: $message');
+    }
   }
 
   Future<void> _initializeLocalNotifications(
@@ -137,9 +148,7 @@ class PushService {
     await _local.initialize(
       settings: settings,
       onDidReceiveNotificationResponse: (response) {
-        // Navigation is delegated to the UI layer; this service has no
-        // BuildContext and is safe to use from notification callbacks.
-        onRoute(_notificationRoute(response.payload));
+        onRoute(routeFromMessage({'route': response.payload}));
       },
     );
 
@@ -152,54 +161,53 @@ class PushService {
 
     await _local
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     final launchDetails = await _local.getNotificationAppLaunchDetails();
     if (launchDetails?.didNotificationLaunchApp ?? false) {
-      _pendingLocalRoute = _notificationRoute(
-        launchDetails?.notificationResponse?.payload,
-      );
+      _pendingLocalRoute = routeFromMessage({
+        'route': launchDetails?.notificationResponse?.payload,
+      });
     }
   }
 
-  Future<void> _listenForMessages(
-    void Function(String route) onRoute,
-  ) async {
+  Future<void> _listenForMessages(void Function(String route) onRoute) async {
     await _foregroundSubscription?.cancel();
     await _openedAppSubscription?.cancel();
 
-    _foregroundSubscription = FirebaseMessaging.onMessage.listen(
-      (message) async {
-        try {
-          final route = _notificationRoute(message.data['route']?.toString());
-          const androidDetails = AndroidNotificationDetails(
-            'pengumuman',
-            'Pengumuman Kampus',
-            channelDescription: 'Notifikasi pengumuman kampus',
-            importance: Importance.high,
-            priority: Priority.high,
-          );
-          const iosDetails = DarwinNotificationDetails();
+    _foregroundSubscription = FirebaseMessaging.onMessage.listen((
+      message,
+    ) async {
+      try {
+        final route = routeFromMessage(message.data);
+        const androidDetails = AndroidNotificationDetails(
+          'pengumuman',
+          'Pengumuman Kampus',
+          channelDescription: 'Notifikasi pengumuman kampus',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+        const iosDetails = DarwinNotificationDetails();
 
-          await _local.show(
-            id: message.hashCode & 0x7fffffff,
-            title: message.notification?.title ?? 'Pengumuman',
-            body: message.notification?.body ?? '',
-            notificationDetails: const NotificationDetails(
-              android: androidDetails,
-              iOS: iosDetails,
-            ),
-            payload: route,
-          );
-        } catch (error) {
-          debugPrint('Gagal menampilkan notifikasi lokal: $error');
-        }
-      },
-    );
+        await _local.show(
+          id: message.hashCode & 0x7fffffff,
+          title: message.notification?.title ?? 'Pengumuman',
+          body: message.notification?.body ?? '',
+          notificationDetails: const NotificationDetails(
+            android: androidDetails,
+            iOS: iosDetails,
+          ),
+          payload: route,
+        );
+      } catch (error) {
+        debugPrint('Gagal menampilkan notifikasi lokal: $error');
+      }
+    });
 
     _openedAppSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
-      (message) => onRoute(_notificationRoute(message.data['route']?.toString())),
+      (message) => onRoute(routeFromMessage(message.data)),
     );
   }
 
@@ -207,11 +215,13 @@ class PushService {
     void Function(String route) onRoute,
   ) async {
     final initial = await _messaging.getInitialMessage();
+
     if (initial != null) {
-      onRoute(_notificationRoute(initial.data['route']?.toString()));
+      onRoute(routeFromMessage(initial.data));
     } else if (_pendingLocalRoute != null) {
       onRoute(_pendingLocalRoute!);
     }
+
     _pendingLocalRoute = null;
   }
 
@@ -247,3 +257,7 @@ class PushService {
     return '/';
   }
 }
+
+final fcmBackendStatus = ValueNotifier<String>(
+  'Token belum dikirim ke backend.',
+);

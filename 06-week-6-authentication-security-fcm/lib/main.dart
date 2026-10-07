@@ -11,6 +11,7 @@ import 'pages/debug_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'providers/auth_provider.dart';
+import 'routes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,11 +20,7 @@ Future<void> main() async {
 
   registerBackgroundHandler();
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -45,7 +42,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     _pushService = PushService(api: ref.read(apiClientProvider));
 
     router = GoRouter(
-      initialLocation: '/login',
+      initialLocation: AppRoutes.login,
       redirect: (context, state) {
         final authState = ref.read(authStateProvider);
 
@@ -54,50 +51,39 @@ class _MyAppState extends ConsumerState<MyApp> {
         }
 
         final loggedIn = authState.asData?.value ?? false;
-        final goingLogin = state.matchedLocation == '/login';
+        final goingLogin = state.matchedLocation == AppRoutes.login;
 
         if (!loggedIn) {
-          return goingLogin ? null : '/login';
+          return goingLogin ? null : AppRoutes.login;
         }
 
-        // Setelah login siap, buka tujuan notifikasi yang disimpan.
         final pendingRoute = _pendingNotificationRoute;
 
         if (pendingRoute != null) {
           _pendingNotificationRoute = null;
 
-          if (state.matchedLocation != pendingRoute) {
-            return pendingRoute;
-          }
-
-          return null;
+          return state.matchedLocation == pendingRoute ? null : pendingRoute;
         }
 
-        if (goingLogin) {
-          return '/';
-        }
-
-        return null;
+        return goingLogin ? AppRoutes.home : null;
       },
       routes: [
         GoRoute(
-          path: '/login',
+          path: AppRoutes.login,
           builder: (context, state) => const LoginPage(),
         ),
         GoRoute(
-          path: '/',
+          path: AppRoutes.home,
           builder: (context, state) => const HomePage(),
         ),
         GoRoute(
-          path: '/debug',
+          path: AppRoutes.debug,
           builder: (context, state) => const DebugPage(),
         ),
         GoRoute(
-          path: '/pengumuman/:id',
+          path: AppRoutes.announcementPattern,
           builder: (context, state) {
-            return AnnouncementPage(
-              id: state.pathParameters['id'] ?? '',
-            );
+            return AnnouncementPage(id: state.pathParameters['id'] ?? '');
           },
         ),
       ],

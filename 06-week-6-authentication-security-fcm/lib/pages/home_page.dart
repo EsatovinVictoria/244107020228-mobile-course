@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
+import '../routes.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -27,24 +28,21 @@ class HomePage extends ConsumerWidget {
           children: [
             const Text(
               'Login berhasil',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text('Selamat datang di Campus Notify'),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                context.go('/pengumuman/1');
+                context.go(AppRoutes.announcement('1'));
               },
               child: const Text('Buka Pengumuman'),
             ),
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: () {
-                context.push('/debug');
+                context.push(AppRoutes.debug);
               },
               child: const Text('Debug FCM'),
             ),
