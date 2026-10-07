@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'messaging/push_service.dart';
 import 'pages/announcement_page.dart';
+import 'pages/debug_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'providers/auth_provider.dart';
@@ -13,6 +16,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
+
+  registerBackgroundHandler();
 
   runApp(
     const ProviderScope(
@@ -30,6 +35,7 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> {
   late final GoRouter router;
+  String? _pendingNotificationRoute;
 
   @override
   void initState() {
@@ -47,11 +53,24 @@ class _MyAppState extends ConsumerState<MyApp> {
         final loggedIn = authState.asData?.value ?? false;
         final goingLogin = state.matchedLocation == '/login';
 
-        if (!loggedIn && !goingLogin) {
-          return '/login';
+        if (!loggedIn) {
+          return goingLogin ? null : '/login';
         }
 
-        if (loggedIn && goingLogin) {
+        // Setelah login siap, buka tujuan notifikasi yang disimpan.
+        final pendingRoute = _pendingNotificationRoute;
+
+        if (pendingRoute != null) {
+          _pendingNotificationRoute = null;
+
+          if (state.matchedLocation != pendingRoute) {
+            return pendingRoute;
+          }
+
+          return null;
+        }
+
+        if (goingLogin) {
           return '/';
         }
 
@@ -67,6 +86,10 @@ class _MyAppState extends ConsumerState<MyApp> {
           builder: (context, state) => const HomePage(),
         ),
         GoRoute(
+          path: '/debug',
+          builder: (context, state) => const DebugPage(),
+        ),
+        GoRoute(
           path: '/pengumuman/:id',
           builder: (context, state) {
             return AnnouncementPage(
@@ -80,21 +103,46 @@ class _MyAppState extends ConsumerState<MyApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      _requestPermission();
+      unawaited(_initMessaging());
     });
   }
 
-  Future<void> _requestPermission() async {
+  Future<void> _initMessaging() async {
     try {
+      void goFromNotification(String route) {
+        if (!mounted) return;
+
+        // Simpan tujuan, lalu minta router memeriksa status login.
+        _pendingNotificationRoute = route;
+        router.refresh();
+      }
+
+      await initLocalNotifications(goFromNotification);
+      await listenForeground(goFromNotification);
+
+      // Proses notifikasi yang membuka aplikasi dari terminated.
+      await handleTerminated(goFromNotification);
+
       final granted = await requestNotificationPermission();
 
-      debugPrint(
-        granted
-            ? 'Izin notifikasi diberikan.'
-            : 'Izin notifikasi belum diberikan.',
+      if (!granted) {
+        debugPrint('Izin notifikasi belum diberikan.');
+        return;
+      }
+
+      debugPrint('Izin notifikasi diberikan.');
+
+      await initFcmToken(
+        onToken: (token) async {
+          debugPrint(
+            'Token FCM diterima; backend belum dikonfigurasi.',
+          );
+        },
       );
-    } catch (_) {
-      debugPrint('Terjadi kesalahan saat meminta izin notifikasi.');
+
+      debugPrint('Inisialisasi FCM dan notifikasi lokal selesai.');
+    } catch (error) {
+      debugPrint('Inisialisasi messaging gagal: $error');
     }
   }
 
@@ -113,6 +161,9 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   void dispose() {
+    unawaited(disposeMessageListeners());
+    unawaited(disposeFcmToken());
+
     router.dispose();
     super.dispose();
   }

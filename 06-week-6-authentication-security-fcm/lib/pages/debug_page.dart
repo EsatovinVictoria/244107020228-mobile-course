@@ -59,6 +59,57 @@ class DebugPage extends StatelessWidget {
             },
           ),
           const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await subscribePengumuman();
+
+                if (!context.mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Berhasil berlangganan topik.'),
+                  ),
+                );
+              } catch (error) {
+                if (!context.mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Subscribe gagal: $error'),
+                  ),
+                );
+              }
+            },
+            child: const Text('Subscribe pengumuman-kampus'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () async {
+              try {
+                await unsubscribePengumuman();
+
+                if (!context.mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Berhasil berhenti berlangganan topik.'),
+                  ),
+                );
+              } catch (error) {
+                if (!context.mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Unsubscribe gagal: $error'),
+                  ),
+                );
+              }
+            },
+            child: const Text('Unsubscribe pengumuman-kampus'),
+          ),
+          const SizedBox(height: 24),
           const Text(
             'Backend: belum dikonfigurasi.',
             style: TextStyle(fontWeight: FontWeight.bold),
