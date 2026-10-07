@@ -851,6 +851,12 @@ Jawaban: Saya menerima draf AI sebagai dasar implementasi, tetapi belum sebagai 
 
 3. Pindahkan pemetaan DioException -> pesan ramah pengguna (401, timeout, offline) ke lib/data/api_errors.dart agar UI hanya menerima pesan, bukan exception mentah.
 
+Berikut merupakan bukti hasil flutter test dan analze
+
+![Pengujian Refactoring](screenshots/refactor_flutterTest.png)
+
+![Pengujian Refactoring](screenshots/refactor_flutterAnalyze.png)
+
 ## Mini Project
 
 Login (mock/Firebase Auth) dengan guard route: belum login selalu diarahkan ke /login.
@@ -867,11 +873,17 @@ Refleksi
 
 1. Mengapa refresh token tidak boleh disimpan di SharedPreferences? Apa risikonya bila bocor?
 
-
+Jawaban: SharedPreferences tidak dirancang untuk menyimpan rahasia secara aman. Refresh token sebaiknya disimpan menggunakan flutter_secure_storage yang memanfaatkan perlindungan penyimpanan platform. Jika bocor, penyerang dapat meminta access token baru dan mengakses akun korban selama refresh token masih berlaku dan belum dicabut.
 
 2. Apa yang rusak bila onTokenRefresh diabaikan selama satu semester perkuliahan?
 
+Jawaban: Token FCM perangkat dapat berubah, misalnya setelah instalasi ulang atau penghapusan data aplikasi. Jika perubahan tidak dikirim ke backend, backend tetap mengirim pesan ke token lama. Akibatnya, sebagian mahasiswa bisa tidak menerima pengumuman, meskipun aplikasi masih digunakan. Masalahnya terletak pada pengiriman notifikasi ke token perangkat yang sudah tidak valid.
 
 3. Kapan memakai topik dan kapan memakai token perangkat? Beri contoh pesan kampus untuk masing-masing.
 
+Jawaban:3. Topik digunakan untuk mengirim informasi umum kepada banyak pengguna yang berlangganan, misalnya pengumuman libur kampus melalui topik pengumuman-kampus atau jadwal kegiatan UKM melalui topik info-ukm. Token perangkat digunakan untuk mengirim pesan personal kepada pengguna tertentu, misalnya pemberitahuan nilai sudah tersedia atau pengingat tagihan UKT. Backend harus memastikan token perangkat terhubung ke pengguna yang benar agar pesan tidak salah penerima.
+
 4. Bagian mana dari draf AI yang Anda tolak atau perbaiki, dan mengapa?
+
+Jawaban: Saya memperbaiki string rute yang tersebar dengan memindahkannya ke routes.dart, agar GoRouter dan notifikasi menggunakan rute yang sama. Parsing payload saya pisahkan menjadi fungsi murni routeFromMessage() supaya bisa diuji tanpa Firebase. Saya juga memisahkan pemetaan error Dio ke api_errors.dart agar pengguna mendapatkan pesan yang mudah dipahami.
+Saya menolak status backend yang selalu menyatakan berhasil tanpa memeriksa respons API, lalu menggantinya dengan status berdasarkan hasil request. Integrasi backend belum saya nyatakan selesai karena alamat API masih berupa contoh. Penggunaan instance PushService yang terpisah dan retry autentikasi tanpa batas juga masih perlu diperbaiki.

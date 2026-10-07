@@ -248,14 +248,6 @@ class PushService {
     final length = token.length < 12 ? token.length : 12;
     return '${token.substring(0, length)}...';
   }
-
-  String _notificationRoute(String? route) {
-    if (route == '/') return '/';
-    if (route != null && RegExp(r'^/pengumuman/[0-9]+$').hasMatch(route)) {
-      return route;
-    }
-    return '/';
-  }
 }
 
 final fcmBackendStatus = ValueNotifier<String>(
