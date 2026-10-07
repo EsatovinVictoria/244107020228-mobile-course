@@ -27,7 +27,10 @@ class HomePage extends ConsumerWidget {
           children: [
             const Text(
               'Login berhasil',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             const Text('Selamat datang di Campus Notify'),
@@ -37,6 +40,13 @@ class HomePage extends ConsumerWidget {
                 context.go('/pengumuman/1');
               },
               child: const Text('Buka Pengumuman'),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () {
+                context.push('/debug');
+              },
+              child: const Text('Debug FCM'),
             ),
           ],
         ),
