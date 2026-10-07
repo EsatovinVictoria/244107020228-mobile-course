@@ -35,11 +35,14 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> {
   late final GoRouter router;
+  late final PushService _pushService;
   String? _pendingNotificationRoute;
 
   @override
   void initState() {
     super.initState();
+
+    _pushService = PushService(api: ref.read(apiClientProvider));
 
     router = GoRouter(
       initialLocation: '/login',
@@ -117,29 +120,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         router.refresh();
       }
 
-      await initLocalNotifications(goFromNotification);
-      await listenForeground(goFromNotification);
-
-      // Proses notifikasi yang membuka aplikasi dari terminated.
-      await handleTerminated(goFromNotification);
-
-      final granted = await requestNotificationPermission();
-
-      if (!granted) {
-        debugPrint('Izin notifikasi belum diberikan.');
-        return;
-      }
-
-      debugPrint('Izin notifikasi diberikan.');
-
-      await initFcmToken(
-        onToken: (token) async {
-          debugPrint(
-            'Token FCM diterima; backend belum dikonfigurasi.',
-          );
-        },
-      );
-
+      await _pushService.initialize(onRoute: goFromNotification);
       debugPrint('Inisialisasi FCM dan notifikasi lokal selesai.');
     } catch (error) {
       debugPrint('Inisialisasi messaging gagal: $error');
@@ -161,8 +142,7 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   void dispose() {
-    unawaited(disposeMessageListeners());
-    unawaited(disposeFcmToken());
+    unawaited(_pushService.dispose());
 
     router.dispose();
     super.dispose();

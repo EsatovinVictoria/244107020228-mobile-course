@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../messaging/push_service.dart';
+import '../providers/auth_provider.dart';
 
-class DebugPage extends StatelessWidget {
+class DebugPage extends ConsumerWidget {
   const DebugPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pushService = PushService(api: ref.read(apiClientProvider));
     return Scaffold(
       appBar: AppBar(
         title: const Text('Debug FCM'),
@@ -63,7 +66,7 @@ class DebugPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               try {
-                await subscribePengumuman();
+                await pushService.subscribePengumuman();
 
                 if (!context.mounted) return;
 
@@ -88,7 +91,7 @@ class DebugPage extends StatelessWidget {
           OutlinedButton(
             onPressed: () async {
               try {
-                await unsubscribePengumuman();
+                await pushService.unsubscribePengumuman();
 
                 if (!context.mounted) return;
 
@@ -111,14 +114,13 @@ class DebugPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           const Text(
-            'Backend: belum dikonfigurasi.',
+            'Backend: token didaftarkan ke POST /devices.',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
-            'Token sudah dapat diperiksa di aplikasi. '
-            'Pengiriman dan penyimpanan token di backend '
-            'belum dilakukan.',
+            'Token FCM dikirim ke backend setelah izin diberikan '
+            'dan setiap kali token berubah.',
           ),
         ],
       ),
