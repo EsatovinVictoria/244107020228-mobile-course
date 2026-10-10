@@ -88,3 +88,61 @@ AuthSession menjadi entity domain, AuthRepository menjadi kontrak, dan AuthRepos
 
 Fitur pengumuman dan messaging tetap dipertahankan. Tidak ada fitur notes baru yang ditambahkan.
 
+
+## Praktikum 2: Domain dan Data per Fitur
+
+Menerapkan pemisahan domain dan data pada fitur auth yang sudah tersedia di Campus Notify. Implementasi autentikasi tetap menggunakan simulasi seperti pada project Minggu 6.
+
+Membuat entity murni
+
+Membuat AuthSession pada lib/features/auth/domain/entities/auth_session.dart untuk menyimpan access token dan refresh token. Entity tidak mengimpor Flutter atau plugin serta tidak melakukan mapping data.
+
+Membuat failure dan kontrak repository
+
+Membuat lib/core/failures.dart yang berisi Failure, LocalFailure, NetworkFailure, dan AuthFailure. Failure digunakan untuk menyampaikan kegagalan melalui pesan tanpa meneruskan exception mentah ke presentation.
+
+Membuat interface AuthRepository pada lib/features/auth/domain/repositories/auth_repository.dart. Kontrak menyediakan operasi checkSession, login, refresh, dan logout.
+
+Hasil operasi menggunakan record Dart yang memuat data hasil dan Failure. Implementasi penyimpanan serta proses autentikasi tidak diletakkan pada kontrak domain.
+
+Membuat implementasi data
+
+Menyalin TokenStore ke lib/features/auth/data/datasources/token_store.dart. File lama pada lib/data/token_store.dart tetap dipertahankan sementara karena masih digunakan oleh provider lama.
+
+Membuat AuthRepositoryImpl pada lib/features/auth/data/repositories/auth_repository_impl.dart untuk mengimplementasikan kontrak AuthRepository. TokenStore diberikan melalui constructor agar dependency penyimpanan tidak dibuat langsung di dalam repository.
+
+Repository menangani pembacaan sesi, penyimpanan token setelah login dan refresh, serta penghapusan token saat logout. Kegagalan penyimpanan dikembalikan sebagai LocalFailure.
+
+Model belum dibuat karena autentikasi masih menggunakan simulasi dan belum memerlukan mapping respons API. Data sesi menggunakan entity AuthSession. Mapping akan ditempatkan pada data layer ketika integrasi API diterapkan.
+
+Membuat use case
+
+Membuat use case pada lib/features/auth/domain/usecases untuk menyediakan operasi autentikasi melalui kontrak repository.
+
+| File | Fungsi |
+| --- | --- |
+| check_auth_session.dart | Memeriksa keberadaan sesi melalui repository. |
+| login.dart | Memvalidasi email dan panjang password sebelum memanggil repository untuk login. |
+| logout.dart | Memanggil repository untuk menghapus sesi login. |
+
+Use case Login memiliki aturan validasi sehingga input yang tidak valid tidak diteruskan ke repository. CheckAuthSession dan Logout saat ini meneruskan operasi repository untuk menyediakan alur pemanggilan yang konsisten.
+
+Berikut merupakan struktur domain dan data fitur auth setelah file dibuat.
+
+![Struktur Domain dan Data Auth](screenshots/p2_strukturSetelahRefactor.png)
+
+Melakukan pemeriksaan kode
+
+Menjalankan dart format dan flutter analyze. Memperbaiki saran prefer_initializing_formals dengan menggunakan constructor AuthRepositoryImpl(this._tokenStore).
+
+Berikut merupakan hasil pemeriksaan static analysis setelah perbaikan.
+
+![Hasil Flutter Analyze](screenshots/p2_flutterAnalyze.png)
+
+Memeriksa import pada domain menggunakan Select-String. Pencarian import package digunakan untuk memastikan domain tidak bergantung pada Flutter atau plugin.
+
+Berikut merupakan hasil pemeriksaan import domain.
+
+![Pemeriksaan Import Domain](screenshots/p2_pemeriksaanImportDomain.png)
+
+Pada tahap ini, domain dan data baru belum dihubungkan ke presentation. Aplikasi masih menggunakan provider dan repository lama. Penyusunan DI, penghubungan notifier ke use case, serta penghapusan file lama dilakukan pada Praktikum 3.
