@@ -146,3 +146,133 @@ Berikut merupakan hasil pemeriksaan import domain.
 ![Pemeriksaan Import Domain](screenshots/p2_pemeriksaanImportDomain.png)
 
 Pada tahap ini, domain dan data baru belum dihubungkan ke presentation. Aplikasi masih menggunakan provider dan repository lama. Penyusunan DI, penghubungan notifier ke use case, serta penghapusan file lama dilakukan pada Praktikum 3.
+
+## Praktikum 3: Presentation, DI, dan Verifikasi
+
+Menghubungkan domain dan data fitur auth ke presentation menggunakan Riverpod. Refactor dilakukan pada fitur autentikasi yang sudah tersedia di Campus Notify.
+
+Membuat dependency injection dengan Riverpod
+
+Membuat lib/features/auth/di/auth_providers.dart untuk menyusun dependency TokenStore, AuthRepositoryImpl, dan use case autentikasi.
+
+Provider repository menggunakan kontrak AuthRepository, sedangkan implementasinya menggunakan AuthRepositoryImpl. Use case menerima kontrak repository sehingga implementasi dapat diganti dengan repository palsu saat pengujian.
+
+| Provider | Fungsi |
+| --- | --- |
+| tokenStoreProvider | Menyediakan penyimpanan token. |
+| authRepositoryProvider | Menyediakan implementasi melalui kontrak AuthRepository. |
+| checkAuthSessionProvider | Menyediakan use case pemeriksaan sesi. |
+| loginUseCaseProvider | Menyediakan use case login. |
+| logoutUseCaseProvider | Menyediakan use case logout. |
+
+Membuat lib/di/app_providers.dart untuk menyediakan API client dan PushService yang digunakan lintas halaman. DebugPage dan main.dart memperoleh PushService melalui provider.
+
+Menghubungkan notifier ke use case
+
+Membuat lib/features/auth/presentation/providers/auth_state_provider.dart untuk mengelola state autentikasi.
+
+AuthNotifier memanggil CheckAuthSession, Login, dan Logout melalui provider. Pembacaan, penyimpanan, serta penghapusan token dilakukan oleh repository, sehingga notifier tidak mengakses TokenStore secara langsung.
+
+Notifier menyediakan state loading, berhasil, dan gagal untuk ditampilkan oleh halaman. Pesan Failure diteruskan sebagai pesan kesalahan tanpa menampilkan exception penyimpanan mentah.
+
+Memisahkan halaman dari pengelolaan data
+
+Memindahkan halaman login dari lib/pages/login_page.dart ke lib/features/auth/presentation/pages/login_page.dart.
+
+LoginPage membaca authStateProvider dan memanggil notifier ketika tombol Login ditekan. Validasi email dan panjang password berada pada use case Login, sedangkan penyimpanan sesi berada pada data layer.
+
+Memperbarui import pada main.dart dan HomePage agar menggunakan provider autentikasi yang baru.
+
+Mengubah DebugPage agar memperoleh PushService melalui pushServiceProvider. Pesan kegagalan subscribe dan unsubscribe ditampilkan menggunakan pesan ramah pengguna.
+
+Merapikan file lama
+
+Memindahkan API client dan pemetaan pesan kesalahan ke lib/core/network. API client menerima callback pengelolaan sesi yang dihubungkan melalui DI.
+
+Menghapus provider, repository, penyimpanan token, dan halaman login lama setelah seluruh pemanggilan menggunakan struktur baru.
+
+Berikut merupakan struktur folder sebelum dan sesudah setelah penghubungan presentation dan DI.
+
+![Struktur Setelah Refactor](screenshots/p3_strukturSebelumRefactor.png)
+
+![Struktur Setelah Refactor](screenshots/p3_strukturSesudahRefactor.png)
+
+Melakukan verifikasi dependency rule
+
+Menjalankan pencarian menggunakan Select-String pada PowerShell karena rg belum tersedia.
+
+| Pemeriksaan | Lokasi pencarian | Hasil |
+| --- | --- | --- |
+| Akses data mentah pada presentation | lib/features/auth/presentation dan lib/pages | Tidak ditemukan kecocokan dengan pola pencarian. |
+| Import package pada domain | lib/features/auth/domain | Tidak ditemukan. |
+| Import package pada failure domain | lib/core/failures.dart | Tidak ditemukan. |
+
+Pemeriksaan domain dilakukan pada lib/features/auth/domain dan lib/core/failures.dart. Folder lib/core/network merupakan infrastruktur jaringan yang menggunakan Dio sehingga tidak termasuk bagian domain murni.
+
+Berikut merupakan hasil pemeriksaan presentation.
+
+![Pemeriksaan Presentation](screenshots/p3_presentationAksesDataMentah.png)
+
+Berikut merupakan hasil pemeriksaan import domain dan failure.
+
+![Pemeriksaan Domain](screenshots/p3_domainDanFailureDariImportPackage.png)
+
+Tidak adanya kecocokan menunjukkan bahwa pola yang diperiksa tidak ditemukan. Pemeriksaan ini dilengkapi dengan peninjauan alur dependency pada kode.
+
+Melakukan static analysis dan pengujian otomatis
+
+Menjalankan flutter analyze setelah penghubungan seluruh file untuk memeriksa kesalahan dan peringatan kode.
+
+Berikut merupakan hasil static analysis terbaru.
+
+![Hasil Flutter Analyze](screenshots/p3_flutterAnalyze.png)
+
+Menjalankan flutter test. Enam pengujian routeFromMessage berhasil dengan hasil All tests passed.
+
+Pengujian mencakup rute pengumuman valid, rute Home, payload kosong, tipe route yang tidak sesuai, penolakan rute tidak valid, dan pemilihan tujuan ketika route berbeda dengan id.
+
+Berikut merupakan hasil pengujian otomatis.
+
+![Hasil Flutter Test](screenshots/p3_flutterTest.png)
+
+Pengujian yang tersedia saat ini memverifikasi parsing rute notifikasi. Pengujian use case auth menggunakan repository palsu belum ditambahkan.
+
+Melakukan pengujian manual
+
+Menjalankan aplikasi pada emulator Android dan mencoba alur fitur untuk membandingkan perilaku sebelum serta setelah refactor. Autentikasi masih menggunakan simulasi seperti pada Minggu 6.
+
+| Fitur | Cara pengujian | Hasil yang diharapkan | Hasil aktual |
+| --- | --- | --- | --- |
+| Login gagal | Memasukkan email tanpa @ atau password kurang dari enam karakter. | Pesan kesalahan muncul dan tetap di halaman login. | Belum dicatat. |
+| Login berhasil | Memasukkan mahasiswa@kampus.ac.id dan password 123456. | Halaman Home terbuka. | Belum dicatat. |
+| Sesi login | Menutup dan membuka kembali aplikasi setelah login. | Sesi tersimpan dan halaman Home terbuka. | Belum dicatat. |
+| Logout | Menekan tombol logout pada Home. | Kembali ke halaman login. | Belum dicatat. |
+| Pengumuman | Menekan Buka Pengumuman. | Halaman pengumuman dengan ID 1 terbuka. | Belum dicatat. |
+| Notifikasi | Mengirim dan mengeklik notifikasi pada foreground, background, dan terminated. | Notifikasi membuka tujuan sesuai payload. | Belum dicatat. |
+| Topik | Menekan Subscribe dan Unsubscribe pada Debug FCM. | Operasi berhasil dan status topik berubah. | Belum dicatat. |
+
+Membandingkan tampilan sebelum dan setelah refactor
+
+Menggunakan project Minggu 6 sebagai kondisi sebelum refactor dan project Minggu 7 sebagai kondisi setelah refactor.
+
+Berikut merupakan tampilan login sebelum dan setelah refactor.
+
+![Login Sebelum Refactor](screenshots/p3_loginBefore.png)
+
+![Login Setelah Refactor](screenshots/p3_refactorTampilanLogin.png)
+
+Berikut merupakan tampilan Home sebelum dan setelah refactor.
+
+![Home Sebelum Refactor](screenshots/p3_homeBefore.png)
+
+![Home Setelah Refactor](screenshots/p3_refactorTampilanUtama.png)
+
+Dan berikut merupakan tampilan notifiksi pada state foreground.
+
+![Notifikasi Foreground](screenshots/p3_refactorTampilanNotifikasiForeground.png)
+
+Berikut merupakan struktur folder sebelum refactor.
+
+![Struktur Sebelum Refactor](screenshots/p3_strukturSebelumRefactor.png)
+
+Perbandingan digunakan untuk memastikan tampilan dan perilaku aplikasi tetap sama setelah susunan kode dipisahkan menjadi domain, data, presentation, dan DI.

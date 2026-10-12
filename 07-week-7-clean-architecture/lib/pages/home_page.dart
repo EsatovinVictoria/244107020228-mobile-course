@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../providers/auth_provider.dart';
+import '../features/auth/presentation/providers/auth_state_provider.dart';
 import '../routes.dart';
 
 class HomePage extends ConsumerWidget {

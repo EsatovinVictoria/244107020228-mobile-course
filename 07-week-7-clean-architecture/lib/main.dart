@@ -9,8 +9,9 @@ import 'messaging/push_service.dart';
 import 'pages/announcement_page.dart';
 import 'pages/debug_page.dart';
 import 'pages/home_page.dart';
-import 'pages/login_page.dart';
-import 'providers/auth_provider.dart';
+import 'di/app_providers.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/providers/auth_state_provider.dart';
 import 'routes.dart';
 
 Future<void> main() async {
@@ -39,7 +40,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   void initState() {
     super.initState();
 
-    _pushService = PushService(api: ref.read(apiClientProvider));
+    _pushService = ref.read(pushServiceProvider);
 
     router = GoRouter(
       initialLocation: AppRoutes.login,
@@ -128,8 +129,6 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   void dispose() {
-    unawaited(_pushService.dispose());
-
     router.dispose();
     super.dispose();
   }

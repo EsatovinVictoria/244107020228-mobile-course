@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../routes.dart';
-import '../data/api_errors.dart';
+import '../core/network/api_errors.dart';
 
 const _campusTopic = 'pengumuman-kampus';
 

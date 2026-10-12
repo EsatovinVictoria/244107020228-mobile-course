@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../messaging/push_service.dart';
-import '../providers/auth_provider.dart';
+import '../di/app_providers.dart';
 
 class DebugPage extends ConsumerWidget {
   const DebugPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pushService = PushService(api: ref.read(apiClientProvider));
+    final pushService = ref.watch(pushServiceProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Debug FCM')),
       body: ListView(
@@ -65,11 +65,15 @@ class DebugPage extends ConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Berhasil berlangganan topik.')),
                 );
-              } catch (error) {
+              } catch (_) {
                 if (!context.mounted) return;
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Subscribe gagal: $error')),
+                  const SnackBar(
+                    content: Text(
+                      'Gagal berlangganan topik. Silakan coba lagi.',
+                    ),
+                  ),
                 );
               }
             },
@@ -88,11 +92,15 @@ class DebugPage extends ConsumerWidget {
                     content: Text('Berhasil berhenti berlangganan topik.'),
                   ),
                 );
-              } catch (error) {
+              } catch (_) {
                 if (!context.mounted) return;
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Unsubscribe gagal: $error')),
+                  const SnackBar(
+                    content: Text(
+                      'Gagal berhenti berlangganan topik. Silakan coba lagi.',
+                    ),
+                  ),
                 );
               }
             },
@@ -100,13 +108,15 @@ class DebugPage extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           const Text(
-            'Backend: token didaftarkan ke POST /devices.',
+            'Status backend',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Token FCM dikirim ke backend setelah izin diberikan '
-            'dan setiap kali token berubah.',
+          ValueListenableBuilder<String>(
+            valueListenable: fcmBackendStatus,
+            builder: (context, value, child) {
+              return Text(value);
+            },
           ),
         ],
       ),
