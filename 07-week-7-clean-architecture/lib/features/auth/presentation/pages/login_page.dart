@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/failures.dart';
 import '../providers/auth_state_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -30,6 +31,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+
+    final error = authState.error;
+
+    final errorMessage = error is Failure
+        ? error.message
+        : 'Terjadi kesalahan. Silakan coba lagi.';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Campus Notify')),
@@ -61,7 +68,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
-                  authState.error.toString(),
+                  errorMessage,
                   style: const TextStyle(color: Colors.red),
                 ),
               ),

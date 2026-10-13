@@ -1,3 +1,4 @@
+import 'package:campus_notify/core/format.dart';
 import 'package:campus_notify/routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 

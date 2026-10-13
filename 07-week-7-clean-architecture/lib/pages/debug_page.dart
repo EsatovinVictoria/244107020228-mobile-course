@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/failures.dart';
 import '../messaging/push_service.dart';
 import '../di/app_providers.dart';
 
@@ -65,16 +66,15 @@ class DebugPage extends ConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Berhasil berlangganan topik.')),
                 );
-              } catch (_) {
+              } catch (error) {
                 if (!context.mounted) return;
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Gagal berlangganan topik. Silakan coba lagi.',
-                    ),
-                  ),
-                );
+                final message = error is Failure
+                    ? error.message
+                    : 'Gagal berlangganan topik. Silakan coba lagi.';
+
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(message)));
               }
             },
             child: const Text('Subscribe pengumuman-kampus'),
@@ -92,16 +92,15 @@ class DebugPage extends ConsumerWidget {
                     content: Text('Berhasil berhenti berlangganan topik.'),
                   ),
                 );
-              } catch (_) {
+              } catch (error) {
                 if (!context.mounted) return;
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Gagal berhenti berlangganan topik. Silakan coba lagi.',
-                    ),
-                  ),
-                );
+                final message = error is Failure
+                    ? error.message
+                    : 'Gagal berhenti berlangganan topik. Silakan coba lagi.';
+
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(message)));
               }
             },
             child: const Text('Unsubscribe pengumuman-kampus'),

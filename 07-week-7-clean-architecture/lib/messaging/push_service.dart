@@ -6,14 +6,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import '../routes.dart';
+import '../core/failures.dart';
+import '../core/format.dart';
 import '../core/network/api_errors.dart';
 
 const _campusTopic = 'pengumuman-kampus';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Background isolate: do not use BuildContext, ref, or navigate here.
   await Firebase.initializeApp();
   debugPrint('FCM background diterima: ${message.messageId}');
 }
@@ -46,23 +46,30 @@ class PushService {
   Future<void> initialize({
     required void Function(String route) onRoute,
   }) async {
-    await _initializeLocalNotifications(onRoute);
-    await _listenForMessages(onRoute);
-    await _handleTerminatedMessage(onRoute);
+    try {
+      await _initializeLocalNotifications(onRoute);
+      await _listenForMessages(onRoute);
+      await _handleTerminatedMessage(onRoute);
 
-    final granted = await requestPermission();
-    if (!granted) {
-      debugPrint('Izin notifikasi belum diberikan.');
-      return;
+      final granted = await requestPermission();
+
+      if (!granted) {
+        debugPrint('Izin notifikasi belum diberikan.');
+        return;
+      }
+
+      await _initializeToken();
+      await subscribePengumuman();
+    } on Failure {
+      rethrow;
+    } catch (_) {
+      const failure = MessagingFailure('Notifikasi belum dapat ditampilkan.');
+
+      debugPrint(failure.message);
     }
-
-    await _initializeToken();
-    await subscribePengumuman();
   }
 
   Future<bool> requestPermission() async {
-    // iOS: this displays the APNs permission prompt and supports provisional
-    // authorization. Android 13+: POST_NOTIFICATIONS is requested by FCM.
     final settings = await _messaging.requestPermission(
       alert: true,
       badge: true,
@@ -73,8 +80,6 @@ class PushService {
       provisional: true,
     );
 
-    // Android 13+: keep the explicit plugin request for local notifications.
-    // It is harmless on older Android versions and a no-op on iOS.
     await _local
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -92,12 +97,20 @@ class PushService {
       (token) async {
         try {
           await _registerDevice(token, source: 'onTokenRefresh');
-        } catch (error) {
-          debugPrint('Registrasi token FCM yang diperbarui gagal: $error');
+        } catch (_) {
+          const failure = MessagingFailure(
+            'Pembaruan token notifikasi belum dapat diproses.',
+          );
+
+          debugPrint(failure.message);
         }
       },
       onError: (Object error) {
-        debugPrint('Listener token FCM mengalami kesalahan: $error');
+        const failure = MessagingFailure(
+          'Pemantauan token notifikasi mengalami gangguan.',
+        );
+
+        debugPrint(failure.message);
       },
     );
 
@@ -126,10 +139,11 @@ class PushService {
       fcmBackendStatus.value = 'Registrasi token diterima oleh backend.';
       debugPrint('Registrasi token FCM berhasil [$source].');
     } catch (error) {
-      final message = apiErrorMessage(error);
+      final failure = apiFailure(error);
 
-      fcmBackendStatus.value = message;
-      debugPrint('Registrasi token FCM gagal [$source]: $message');
+      fcmBackendStatus.value = failure.message;
+
+      debugPrint('Registrasi token FCM gagal [$source]: ${failure.message}');
     }
   }
 
@@ -201,8 +215,10 @@ class PushService {
           ),
           payload: route,
         );
-      } catch (error) {
-        debugPrint('Gagal menampilkan notifikasi lokal: $error');
+      } catch (_) {
+        const failure = MessagingFailure('Notifikasi belum dapat ditampilkan.');
+
+        debugPrint(failure.message);
       }
     });
 
@@ -226,13 +242,25 @@ class PushService {
   }
 
   Future<void> subscribePengumuman() async {
-    await _messaging.subscribeToTopic(_campusTopic);
-    fcmTopicStatus.value = 'Berlangganan $_campusTopic';
+    try {
+      await _messaging.subscribeToTopic(_campusTopic);
+      fcmTopicStatus.value = 'Berlangganan $_campusTopic';
+    } catch (_) {
+      throw const MessagingFailure(
+        'Gagal berlangganan topik. Silakan coba lagi.',
+      );
+    }
   }
 
   Future<void> unsubscribePengumuman() async {
-    await _messaging.unsubscribeFromTopic(_campusTopic);
-    fcmTopicStatus.value = 'Tidak berlangganan $_campusTopic';
+    try {
+      await _messaging.unsubscribeFromTopic(_campusTopic);
+      fcmTopicStatus.value = 'Tidak berlangganan $_campusTopic';
+    } catch (_) {
+      throw const MessagingFailure(
+        'Gagal berhenti berlangganan topik. Silakan coba lagi.',
+      );
+    }
   }
 
   Future<void> dispose() async {

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/failures.dart';
 import '../../di/auth_providers.dart';
 
 final authStateProvider = AsyncNotifierProvider<AuthNotifier, bool>(
@@ -15,7 +16,7 @@ class AuthNotifier extends AsyncNotifier<bool> {
     final failure = result.failure;
 
     if (failure != null) {
-      throw Exception(failure.message);
+      throw failure;
     }
 
     return result.loggedIn;
@@ -36,12 +37,15 @@ class AuthNotifier extends AsyncNotifier<bool> {
     final failure = result.failure;
 
     if (failure != null) {
-      state = AsyncError(failure.message, StackTrace.current);
+      state = AsyncError(failure, StackTrace.current);
       return;
     }
 
     if (result.session == null) {
-      state = AsyncError('Sesi login tidak tersedia.', StackTrace.current);
+      state = AsyncError(
+        const AuthFailure('Sesi login tidak tersedia. Silakan coba lagi.'),
+        StackTrace.current,
+      );
       return;
     }
 
@@ -62,12 +66,15 @@ class AuthNotifier extends AsyncNotifier<bool> {
     final failure = result.failure;
 
     if (failure != null) {
-      state = AsyncError(failure.message, StackTrace.current);
+      state = AsyncError(failure, StackTrace.current);
       return;
     }
 
     if (!result.success) {
-      state = AsyncError('Logout belum berhasil.', StackTrace.current);
+      state = AsyncError(
+        const AuthFailure('Logout belum berhasil. Silakan coba lagi.'),
+        StackTrace.current,
+      );
       return;
     }
 

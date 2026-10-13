@@ -1172,3 +1172,36 @@ Berikut merupakan hasil ketiga grep
 
 ![Pengujian Grep](screenshots/ai_grep3.png)
 
+## Refactoring, testing, dan error umum
+
+1. Terapkan pola yang sama ke fitur kedua (auth atau announcements): entity + repository interface + impl + 1 use case + provider wiring. Jangan biarkan satu fitur bersih dan sisanya kotor.
+
+Berikut merupakan tampilan untuk aplikasi setelah dilakukan refactor 1
+
+![Hasil Refactor 1](screenshots/refactor1_tampilanUtama.png)
+
+![Hasil Refactor 1](screenshots/refactor1_tampilanPengumuman.png)
+
+2. Ekstrak formatting tanggal dan parsing rute ke fungsi murni di lib/core/format.dart agar bisa diuji tanpa widget.
+
+Berikut merupakan tampilan flutter analyze dan flutter test setelah dilakukan refactor pada nomor 2
+
+![Hasil Refactor 2](screenshots/refactor2_flutterAnalyze.png)
+
+![Hasil Refactor 2](screenshots/refactor2_flutterTest.png)
+
+3. Pindahkan semua exception mentah menjadi Failure yang ramah pengguna sebelum mencapai UI; UI hanya menerima message.
+
+Menggunakan apiFailure untuk memetakan kegagalan jaringan menjadi Failure dan menambahkan MessagingFailure untuk kegagalan notifikasi.
+
+AuthNotifier menyimpan Failure pada state error. LoginPage dan DebugPage menampilkan message tanpa meneruskan exception mentah. Status kegagalan backend juga menggunakan pesan dari Failure.
+
+Berikut merupakan hasil pemeriksaan dan contoh tampilan pesan kesalahan.
+
+![Flutter Analyze Refactor 3](screenshots/refactor3_flutterAnalyze.png)
+
+![Flutter Test Refactor 3](screenshots/refactor3_flutterTest.png)
+
+![Pesan Login Gagal](screenshots/refactor3_errorLogin.png)
+
+![Pesan Kegagalan Backend](screenshots/refactor3_tampilanDebugFCM.png)

@@ -15,3 +15,7 @@ class NetworkFailure extends Failure {
 class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
+
+class MessagingFailure extends Failure {
+  const MessagingFailure(super.message);
+}

@@ -6,13 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'messaging/push_service.dart';
-import 'pages/announcement_page.dart';
+import 'features/announcements/presentation/pages/announcement_page.dart';
 import 'pages/debug_page.dart';
 import 'pages/home_page.dart';
 import 'di/app_providers.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/providers/auth_state_provider.dart';
 import 'routes.dart';
+import 'core/failures.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -110,7 +111,11 @@ class _MyAppState extends ConsumerState<MyApp> {
       await _pushService.initialize(onRoute: goFromNotification);
       debugPrint('Inisialisasi FCM dan notifikasi lokal selesai.');
     } catch (error) {
-      debugPrint('Inisialisasi messaging gagal: $error');
+      final message = error is Failure
+          ? error.message
+          : 'Notifikasi belum dapat diaktifkan. Silakan coba lagi.';
+
+      debugPrint(message);
     }
   }
 
