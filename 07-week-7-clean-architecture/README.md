@@ -1205,3 +1205,13 @@ Berikut merupakan hasil pemeriksaan dan contoh tampilan pesan kesalahan.
 ![Pesan Login Gagal](screenshots/refactor3_errorLogin.png)
 
 ![Pesan Kegagalan Backend](screenshots/refactor3_tampilanDebugFCM.png)
+
+Menguji use case dengan repository palsu
+
+Membuat test/get_announcement_test.dart untuk menguji GetAnnouncement tanpa database, jaringan, atau Firebase.
+
+Pengujian mencakup penerusan ID dan pengumuman, penerusan Failure tanpa exception, serta penolakan ID tidak valid sebelum repository dipanggil.
+
+Berikut merupakan hasil pengujian.
+
+![Pengujian Use Case dengan Repository Palsu](screenshots/refactor_useCaseTest.png)
