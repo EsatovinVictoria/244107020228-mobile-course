@@ -1215,3 +1215,34 @@ Pengujian mencakup penerusan ID dan pengumuman, penerusan Failure tanpa exceptio
 Berikut merupakan hasil pengujian.
 
 ![Pengujian Use Case dengan Repository Palsu](screenshots/refactor_useCaseTest.png)
+
+## Mini Project
+
+1. Minimal 1 fitur penuh (notes atau announcements) terpisah menjadi domain/ (entity, repository interface, use case, failure) + data/ (model, repository impl) + presentation/ (provider wiring, pages).
+
+2. Dependency rule terbukti: sertakan hasil tiga grep sterilitas di README.
+Behavior identik: screenshot before/after tiap fitur di folder screenshots/.
+
+3. Sertakan minimal 2 test yang lulus (use case sukses + failure dengan repository palsu).
+
+4. Kerjakan AI Challenge dan dokumentasikan prompt, tabel usulan-vs-keputusan-final, dan alasan teknis di docs/.
+
+5. Push ke repository portfolio pada folder 07-week-7-clean-architecture/ (atau lanjutkan folder minggu asal + catat refactor di README) dengan struktur lib/, test/, docs/, README.md, dan screenshots/. README menjelaskan tujuan, diagram layer + arah dependensi, fitur utama, stack teknologi, cara menjalankan, dan hasil yang dicapai.
+
+## Refleksi
+
+1. Mengapa interface repository harus tinggal di domain, bukan di data? Apa yang rusak bila dibalik?
+
+Jawaban: Interface repository berada di domain agar aturan bisnis menentukan kontrak tanpa bergantung pada implementasi data. Jika diletakkan di data, domain harus bergantung ke data sehingga aturan dependensi terbalik dan pengujian terpisah menjadi lebih sulit.
+
+2. Kapan use case benar-benar dibutuhkan, dan kapan repository langsung ke notifier sudah cukup?
+
+Jawaban: Use case dibutuhkan ketika ada validasi, aturan bisnis, atau penggabungan beberapa repository. Repository langsung ke notifier cukup untuk CRUD sederhana yang hanya meneruskan satu operasi.
+
+3. Apa biaya over-engineering (use case per CRUD satu-baris) bagi tim kecil? Kapan biayanya sepadan?
+
+Jawaban: Over-engineering menambah file, kode, dan pekerjaan pemeliharaan bagi tim kecil. Biayanya sepadan ketika operasi berkembang menjadi kompleks, digunakan berulang, atau membutuhkan pengujian aturan bisnis secara terpisah.
+
+4. Bagian mana dari usulan AI yang Anda tolak atau sederhanakan, dan mengapa?
+
+Jawaban: Saya menolak penambahan API dan daftar pengumuman baru, serta menunda model auth dan migrasi seluruh state FCM karena belum diperlukan. GetAnnouncement dibuat pada challenge dengan validasi ID; model belum dibuat karena belum ada mapping JSON.
