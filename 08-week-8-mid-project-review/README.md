@@ -2,7 +2,7 @@
 
 ## Tujuan
 
-1. Menjelaskan Git Flow dan strategi branching (main, develop, feature/*, fix/*).
+1. Menjelaskan Git Flow dan strategi branching (main, develop, feature/, fix/).
 2. Menulis commit dan Pull Request yang berkualitas dan mudah direview.
 3. Melakukan peer code review yang konstruktif dengan checklist terstruktur.
 4. Menjalankan static analysis dan formatter (flutter analyze, dart format) hingga bersih.
@@ -258,3 +258,35 @@ Langkah pengujian manual untuk boundary pada login.
 ![Langkah pengujian manual](screenshots/refactor_loginGagal.png)
 
 ![Langkah pengujian manual](screenshots/refactor_loginGagal2.png)
+
+
+## Mini Project
+
+1. Buat minimal 1 issue + 1 PR kecil yang di-merge via review sejawat (branch feature/ → develop).
+
+2. Sertakan template PR lengkap: masalah, solusi, cara uji, dan screenshot.
+
+3. Bukti mesin hijau: hasil flutter analyze + flutter test di README.
+
+4. Dokumentasikan prompt AI, tabel usulan-vs-keputusan-final, dan bukti penolakan/penerimaan di docs/.
+
+5. Push ke folder portfolio 08-week-8-mid-project-review/ dengan struktur docs/, README.md, dan screenshots/. README menjelaskan status paruh semester, peta issue/PR, fitur utama, stack teknologi, cara menjalankan, dan hasil yang dicapai.
+
+
+## Refleksi
+
+1. Apa beda LGTM buta dengan approve yang bertanggung jawab? Apa risikonya bagi tim?
+
+Jawaban: LGTM buta adalah persetujuan yang diberikan secara dangkal hanya dengan membaca sekilas diff kode di browser tanpa memahami konteks issue, tanpa memeriksa arsitektur, dan tanpa melakukan checkout lokal untuk menjalankan pengujian. Sebaliknya, approve yang bertanggung jawab menuntut verifikasi menyeluruh: memastikan logika bisnis benar, batasan arsitektur (clean architecture) tidak dilanggar, static analysis dan test lokal berjalan hijau, serta pengujian manual dilakukan. Risikonya bagi tim jika LGTM buta dibiarkan adalah lolosnya bug kritis dan celah keamanan ke branch utama, terjadinya regresi pada fitur yang sebelumnya stabil, serta akumulasi technical debt yang memperlambat laju pengembangan.
+
+2. Kapan komentar wajib berstatus request changes, dan kapan cukup saran?
+
+Jawaban: Komentar wajib berstatus Request Changes apabila terdapat temuan yang bersifat blocker, seperti kegagalan logika bisnis, pelanggaran dependency rule (misalnya domain mengimpor layer data atau framework Flutter), ketiadaan automated test untuk jalur kritis baru, atau rusaknya pipeline CI. Perubahan tersebut mutlak tidak boleh di-merge sebelum diperbaiki. Sebaliknya, komentar cukup berstatus Saran (Comment/Nitpick) untuk hal-hal non-fungsional minor, seperti usulan refactoring nama variabel agar lebih deskriptif, penambahan komentar dokumentasi penjelas, atau optimasi kecil yang tidak memengaruhi kebenaran aplikasi dan tidak menghalangi rilis saat itu.
+
+3. Bagian mana dari review AI yang Anda tolak atau sederhanakan, dan mengapa?
+
+Jawaban: Bagian review AI yang ditolak adalah usulan Temuan 5 dari Codex mengenai penambahan unit test penerusan failure khusus subtipe LocalFailure pada use case Login. Penolakan ini didasarkan pada alasan teknis bahwa Login meneruskan hasil dari repository secara langsung tanpa percabangan (branching) berdasarkan subtipe Failure, sehingga penambahan test forwarding tidak menguji jalur eksekusi baru. Pengujian pemetaan dan penanganan kegagalan penyimpanan lebih tepat dilakukan pada lapisan data (AuthRepositoryImpl). Selain itu, asumsi AI terkait dependency SQLite disederhanakan/diabaikan karena project menggunakan Dio dan mock repository.
+
+4. Satu hal konkret yang Anda perbaiki setelah review sejawat — apa dampaknya?
+
+Jawaban: Perbaikan konkret yang dilakukan adalah menambahkan boundary test untuk password lebih dari enam karakter (panjang 7 karakter) dan variasi email valid (subdomain serta tag +) pada test/login_test.dart, dilengkapi komentar format dasar email pada use case Login. Dampaknya adalah aturan validasi minimal enam karakter terlindungi dari risiko regresi (misalnya perubahan keliru menjadi "harus tepat 6 karakter"), format email pengguna yang sah dipastikan tetap diterima, serta keterbacaan kode meningkat sehingga mempermudah proses review berikutnya.
