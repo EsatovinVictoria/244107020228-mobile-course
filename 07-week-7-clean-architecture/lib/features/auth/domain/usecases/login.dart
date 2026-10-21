@@ -11,8 +11,10 @@ class Login {
     required String email,
     required String password,
   }) async {
-    // Mempertahankan aturan validasi pada aplikasi lama.
-    if (!email.contains('@') || password.length < 6) {
+    // Validasi format dasar email: [local-part]@[domain].[tld]
+    final isEmailValid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+
+    if (!isEmailValid || password.length < 6) {
       return (
         session: null,
         failure: const AuthFailure('Email atau kata sandi tidak valid'),
