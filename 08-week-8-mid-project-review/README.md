@@ -93,3 +93,55 @@ Issue #1 ditutup secara manual sebagai Completed setelah merge. Penutupan otomat
 Branch remote dan lokal fix/1-auth-email-validation sudah dihapus. Branch develop lokal sudah diperbarui dan sinkron dengan origin/develop.
 
 ![Screenshot](screenshots/p2_merge.png)
+
+## Praktikum 3: Static analysis dan mid review
+
+1. Bersihkan dengan mesin
+
+Pemeriksaan dijalankan pada project 07-week-7-clean-architecture.
+
+- flutter analyze: No issues found.
+- dart format --set-exit-if-changed .: 31 file diperiksa, 0 changed.
+- flutter test: seluruh 27 test lulus.
+
+![Hasil pemeriksaan mesin](screenshots/p3_bersihDenganMesin.png)
+
+2. Aktifkan penolakan otomatis (CI)
+
+Workflow ci dibuat pada .github/workflows/ci.yml dan dijalankan saat pull_request. Job verify menggunakan ubuntu-latest, menyiapkan Flutter 3.47.1 pada channel stable, lalu menjalankan flutter analyze dan flutter test dari folder 07-week-7-clean-architecture.
+
+Pemeriksaan CI pada PR #3 selesai dengan hasil passed.
+
+![Hasil pemeriksaan CI](screenshots/p3_checkPassed.png)
+
+3. Nilai kesiapan tengah semester
+
+Penilaian kesiapan dicatat pada docs/review-checklist.md. Struktur feature-first tersedia pada fitur auth dan announcements. Bukti tiga grep sterilitas Minggu 7 tersimpan pada ai_grep1.png, ai_grep2.png, dan ai_grep3.png di folder screenshots project Minggu 7.
+
+PR #2 sudah di-merge setelah self-review dengan keputusan Approve. Saran penambahan test password tujuh karakter dan komentar regex dinilai tidak menghalangi merge sehingga tidak diterapkan.
+
+Hasil uji manual menunjukkan perilaku aplikasi tetap seperti akhir Minggu 7, kecuali perbaikan validasi email melalui PR #2. Email tidak lengkap seperti esatovin@ ditolak dengan pesan kesalahan.
+
+![Validasi login gagal](screenshots/p3_loginGagal.png)
+
+Login dengan input valid berhasil membuka halaman Home.
+
+![Halaman Home setelah login](screenshots/p3_tampilanUtama.png)
+
+Notifikasi dapat diterima dan layar Debug FCM menunjukkan status berlangganan topik pengumuman-kampus.
+
+![Notifikasi dan status topik](screenshots/p3_tampilanNotifikasi.png)
+
+Status paruh semester
+
+Pemeriksaan analyze, format, test, dan CI lulus. Perilaku aplikasi sudah dibandingkan dengan akhir Minggu 7 dan tetap sama, dengan perubahan validasi email sesuai PR #2.
+
+Autentikasi masih menggunakan mock. Layar Debug FCM masih menampilkan kegagalan koneksi ke backend, sehingga integrasi backend belum dinyatakan selesai.
+
+Review dilakukan secara mandiri melalui self-review. Issue #1 ditutup manual setelah merge karena target PR adalah develop, sedangkan default branch repository masih main.
+
+Peta issue/PR
+
+- Issue #1: Login validation accepts incomplete email addresses. Ditutup manual sebagai Completed setelah perbaikan di-merge.
+- PR #2: fix(auth): reject invalid email addresses and add tests. Sudah di-merge ke develop setelah self-review.
+- PR #3: chore(week8): add review documentation and automated checks. Memuat dokumentasi review dan workflow CI; pemeriksaan CI passed.
