@@ -54,6 +54,8 @@ Hasil pemeriksaan:
 - flutter test: seluruh 27 test lulus.
 - git diff --check: tidak ditemukan masalah whitespace.
 
+![Screenshot](screenshots/p2_openPR.png)
+
 2. Review
 
 Review dilakukan secara mandiri melalui self-review pada PR #2.
@@ -78,6 +80,8 @@ Dampak: penerimaan password lebih dari enam karakter belum diuji.
 
 Usulan: tambahkan test password tujuh karakter dengan email valid, kemudian pastikan repository dipanggil satu kali.
 
+![Screenshot](screenshots/p2_reviewKode.png)
+
 4. Tindak lanjut dan merge
 
 PR #2 digabungkan ke develop menggunakan merge commit. PR hanya memiliki satu commit sehingga tidak diperlukan squash untuk merapikan commit perantara.
@@ -87,3 +91,5 @@ Saran tambahan pada self-review tidak diterapkan karena dinilai tidak menghalang
 Issue #1 ditutup secara manual sebagai Completed setelah merge. Penutupan otomatis melalui Closes #1 tidak terjadi karena target PR adalah develop, sedangkan default branch repository masih main.
 
 Branch remote dan lokal fix/1-auth-email-validation sudah dihapus. Branch develop lokal sudah diperbarui dan sinkron dengan origin/develop.
+
+![Screenshot](screenshots/p2_merge.png)
