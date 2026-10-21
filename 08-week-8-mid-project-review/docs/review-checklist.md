@@ -12,11 +12,11 @@
 - [x] Bukti tiga grep sterilitas Minggu 7 tersedia pada ai_grep1.png, ai_grep2.png, dan ai_grep3.png. Pemeriksaan tersebut mencakup akses data mentah pada presentation auth dan halaman, import package pada domain auth serta Failure, dan instansiasi dependency pada presentation.
 - [x] flutter analyze menghasilkan No issues found.
 - [x] dart format --set-exit-if-changed . memeriksa 31 file dengan 0 changed.
-- [x] flutter test berhasil menjalankan 27 test.
+- [x] flutter test berhasil menjalankan 27 test pada Praktikum 3.
 - [x] PR #2 berisi perubahan kecil dengan pesan commit yang menjelaskan perbaikan validasi login.
 - [x] PR #2 sudah di-merge ke develop setelah self-review dengan keputusan Approve.
-- [x] Saran review sudah dinilai. Penambahan test password tujuh karakter dan komentar regex tidak diterapkan karena dinilai tidak menghalangi merge.
+- [x] Saran review PR #2 sudah dinilai tidak menghalangi merge. Penambahan test password tujuh karakter dan komentar regex belum diterapkan pada kode.
 - [x] Workflow CI pada PR #3 berhasil menjalankan pemeriksaan.
 - [x] README memuat cara menjalankan project secara lengkap.
 - [x] README memuat status paruh semester dan peta issue/PR.
-- [x] Perilaku aplikasi terbaru sudah diuji dan dibandingkan dengan kondisi akhir Minggu 7.
+- [x] Perilaku aplikasi pada Praktikum 3 sudah diuji dan dibandingkan dengan kondisi akhir Minggu 7.

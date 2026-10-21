@@ -9,7 +9,7 @@
 5. Menilai kesiapan project tengah semester dan menindaklanjuti hasil review.
 6. Memverifikasi saran review dari AI sebelum diterapkan.
 
-## Praktikum 1: 
+## Praktikum 1:
 
 1. Menjalankan perintah di repository project Minggu 5-7
 
@@ -145,3 +145,62 @@ Peta issue/PR
 - Issue #1: Login validation accepts incomplete email addresses. Ditutup manual sebagai Completed setelah perbaikan di-merge.
 - PR #2: fix(auth): reject invalid email addresses and add tests. Sudah di-merge ke develop setelah self-review.
 - PR #3: chore(week8): add review documentation and automated checks. Memuat dokumentasi review dan workflow CI; pemeriksaan CI passed.
+
+## AI Challenge
+
+1. Agent yang digunakan: Codex
+
+2. Prompt yang digunakan:
+
+        Review PR Flutter ini sebagai senior Flutter dev.
+        Konteks: feature-first Clean Architecture (presentation -> domain <- data),
+        Riverpod, GoRouter, SQLite + Dio.
+        Fokus: kebenaran, arsitektur, dan test. Abaikan style.
+        Berikan 5 temuan teratas + level (blocker/saran)
+        + alasan + usulan potongan kode perbaikan.
+
+3. Output awal AI
+
+Output awal review PR #2 disimpan pada docs/ai-review-output-awal.md.
+
+4. AI Verification Checklist
+
+Verifikasi dan tabel usulan dibanding keputusan final dicatat pada docs/ai-review-vs-keputusan.md.
+
+- Apakah temuan benar-benar ada? Buktikan dengan grep, test gagal, atau reproduksi manual.
+
+Jawaban:
+Ya. Dua temuan validasi terbukti melalui pengujian verifikasi terhadap versi PR #2:
+Temuan 1: mahasiswa@kampus..ac.id dan mahasiswa@.kampus.ac.id masih diteruskan ke repository.
+Temuan 2: .mahasiswa@kampus.ac.id, mahasiswa.@kampus.ac.id, dan maha..siswa@kampus.ac.id masih diteruskan ke repository.
+Test verifikasi sementara mengharapkan AuthFailure, tetapi hasil aktual failure adalah null. Hasilnya adalah 19 test lulus dan 10 test gagal: tujuh terkait domain dan tiga terkait posisi titik pada local-part. Cuplikan bukti disimpan dalam docs/ai-verification-bukti.md. Test tambahan tersebut tidak disertakan pada kode project yang dipertahankan.
+Temuan 3–5 merupakan kekurangan cakupan test, bukan bukti bahwa perilaku aplikasi saat ini salah.
+
+- Apakah usulan melanggar dependency rule (domain mengimpor Flutter/Dio/SQLite)? Tolak bila ya.
+
+Jawaban:
+Tidak. Usulan validasi menggunakan Dart murni pada use case Login. Domain tetap bergantung pada kontrak AuthRepository.
+Pencarian import pada domain auth tidak menemukan import package Flutter, Dio, SQLite, maupun implementasi data. Penggunaan flutter_test berada pada folder test sehingga tidak melanggar dependency rule.
+
+- Apakah AI hanya nitpick style yang seharusnya ditangani formatter/CI?
+
+Jawaban:
+Tidak. Temuan membahas penerimaan input tidak valid dan cakupan pengujian. Permasalahan tersebut tidak dapat diselesaikan oleh formatter. Static analysis juga tidak membuktikan bahwa aturan validasi sudah benar.
+
+- Minimal 2 temuan AI terbukti benar dengan bukti, dan minimal 1 temuan ditolak dengan alasan tertulis.
+
+Jawaban:
+Temuan 1 dan 2 terbukti benar melalui test verifikasi sementara yang gagal terhadap versi PR #2.
+Usulan temuan 5, yaitu menambahkan test forwarding khusus LocalFailure, ditolak untuk perubahan ini. Login meneruskan hasil repository secara langsung tanpa percabangan berdasarkan subtipe Failure. Test yang tersedia sudah memeriksa bahwa objek failure yang sama dikembalikan.
+Pengulangan test untuk subtipe lain memberikan manfaat tambahan yang terbatas. Penanganan kegagalan penyimpanan lebih tepat diuji pada AuthRepositoryImpl. Penolakan ini tidak berarti kegagalan penyimpanan sudah teruji.
+
+- Keputusan final dan alasan teknis Anda, boleh berbeda dari saran AI selama berargumen.
+
+Jawaban:
+Temuan 1 sampai 4 diterima sebagai rekomendasi dan belum diterapkan pada kode.
+
+Temuan 1: perketat pemeriksaan label domain agar alamat tidak valid ditolak sebelum repository dipanggil.
+Temuan 2: periksa posisi titik pada local-part tanpa tanda kutip, sambil menjaga bentuk valid yang sebelumnya didukung.
+Temuan 3: tambahkan test password lebih dari enam karakter untuk melindungi aturan panjang minimal.
+Temuan 4: tambahkan variasi email valid agar pengetatan validator tidak menolak plus-tag dan subdomain.
+Tolak usulan temuan 5: prioritaskan pengujian jalur kegagalan penyimpanan pada lapisan data daripada mengulang test forwarding tanpa jalur eksekusi berbeda.
