@@ -11,6 +11,7 @@ class Login {
     required String email,
     required String password,
   }) async {
+    // Validasi format dasar email: [local-part]@[domain].[tld]
     final isEmailValid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
 
     if (!isEmailValid || password.length < 6) {
