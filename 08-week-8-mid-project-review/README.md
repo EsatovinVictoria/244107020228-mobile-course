@@ -204,3 +204,57 @@ Temuan 2: periksa posisi titik pada local-part tanpa tanda kutip, sambil menjaga
 Temuan 3: tambahkan test password lebih dari enam karakter untuk melindungi aturan panjang minimal.
 Temuan 4: tambahkan variasi email valid agar pengetatan validator tidak menolak plus-tag dan subdomain.
 Tolak usulan temuan 5: prioritaskan pengujian jalur kegagalan penyimpanan pada lapisan data daripada mengulang test forwarding tanpa jalur eksekusi berbeda.
+
+## Refactoring, Testing, dan Error Umum
+
+1. Refactoring Challenge
+    a. Penerapan saran review sejawat dan AI:
+
+   - Menambahkan komentar penjelasan format dasar email pada use case Login (lib/features/auth/domain/usecases/login.dart) untuk memperjelas aturan regex bagi reviewer.
+
+   - Menambahkan unit test password lebih dari enam karakter (panjang 7 karakter) pada test/login_test.dart untuk mengunci batasan minimal agar tidak terjadi regresi menjadi aturan tepat enam karakter.
+
+   - Menambahkan unit test untuk variasi email valid (subdomain, plus-tag +, dan titik pada local-part) guna memastikan validator tidak menolak format email yang sah.
+
+    b. Otomatisasi style dengan CI:
+
+   - Menambahkan step dart format --output=none --set-exit-if-changed . ke dalam workflow CI GitHub Actions (.github/workflows/ci.yml).
+
+   - Seluruh 31 file telah diformat menggunakan dart format . sehingga jika terdapat kode kotor yang didorong ke pull request, CI akan otomatis menolak (fail) sebelum tahap review manusia.
+
+    c. Strategi pemecahan PR besar (> 300 baris):
+
+   - Menghindari penggabungan banyak layer dalam satu PR besar dengan memecahnya menjadi 2–3 PR berurutan yang masing-masing dapat direview dalam waktu < 15 menit:
+
+     - PR 1: Kontrak domain & use case beserta unit test (< 150 baris).
+
+     - PR 2: Implementasi data layer (remote/local data source & repository) (< 200 baris).
+
+     - PR 3: Integrasi presentation layer (UI, provider, dan routing) (< 150 baris).
+
+   - PR yang dikerjakan pada tahap ini (feature/refactoring-ci-and-error-handling) menjaga prinsip PR kecil dengan cakupan perubahan terfokus hanya pada 3 berkas (~45 baris).
+
+
+2. Testing: Review Tanpa Dijalankan Tidak Sah
+
+Setiap PR yang mengubah perilaku wajib menyertakan bukti uji mesin dan langkah manual:
+
+- dart format: 31 berkas diperiksa, 0 changed.
+
+- flutter analyze: No issues found! (0 issues).
+
+- flutter test: 31 test lulus (All tests passed!), bertambah 4 test dari baseline sebelumnya.
+
+Berikut merupakan bukti pemeriksaan flutter analyze:
+
+![Hasil flutter analyze](screenshots/refactor_flutterAnalyze.png)
+
+Berikut merupakan bukti pemeriksaan flutter test:
+
+![Hasil flutter test](screenshots/refactor_flutterTest.png)
+
+Langkah pengujian manual untuk boundary pada login.
+
+![Langkah pengujian manual](screenshots/refactor_loginGagal.png)
+
+![Langkah pengujian manual](screenshots/refactor_loginGagal2.png)
