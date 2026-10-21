@@ -97,6 +97,45 @@ void main() {
       expect(repo.calls, 1);
     });
 
+    test('meneruskan password lebih dari enam karakter', () async {
+      const session = AuthSession(
+        access: 'fake-access',
+        refresh: 'fake-refresh',
+      );
+      final repo = FakeAuthRepository(session: session);
+
+      final result = await Login(repo)
+          .call(email: 'mahasiswa@kampus.ac.id', password: '1234567');
+
+      expect(result.failure, isNull);
+      expect(result.session, same(session));
+      expect(repo.receivedEmail, 'mahasiswa@kampus.ac.id');
+      expect(repo.receivedPassword, '1234567');
+      expect(repo.calls, 1);
+    });
+
+    for (final email in [
+      'mahasiswa.baru@kampus.ac.id',
+      'user+tag@domain.com',
+      'admin@sub.domain.org',
+    ]) {
+      test('meneruskan variasi email valid "$email"', () async {
+        const session = AuthSession(
+          access: 'fake-access',
+          refresh: 'fake-refresh',
+        );
+        final repo = FakeAuthRepository(session: session);
+
+        final result = await Login(repo)
+            .call(email: email, password: 'password123');
+
+        expect(result.failure, isNull);
+        expect(result.session, same(session));
+        expect(repo.receivedEmail, email);
+        expect(repo.calls, 1);
+      });
+    }
+
     test('meneruskan failure dari repository', () async {
       const failure = AuthFailure('Login ditolak.');
       final repo = FakeAuthRepository(failure: failure);

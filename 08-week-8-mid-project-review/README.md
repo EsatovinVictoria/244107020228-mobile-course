@@ -2,7 +2,7 @@
 
 ## Tujuan
 
-1. Menjelaskan Git Flow dan strategi branching (main, develop, feature/*, fix/*).
+1. Menjelaskan Git Flow dan strategi branching (main, develop, feature/, fix/).
 2. Menulis commit dan Pull Request yang berkualitas dan mudah direview.
 3. Melakukan peer code review yang konstruktif dengan checklist terstruktur.
 4. Menjalankan static analysis dan formatter (flutter analyze, dart format) hingga bersih.
@@ -204,3 +204,89 @@ Temuan 2: periksa posisi titik pada local-part tanpa tanda kutip, sambil menjaga
 Temuan 3: tambahkan test password lebih dari enam karakter untuk melindungi aturan panjang minimal.
 Temuan 4: tambahkan variasi email valid agar pengetatan validator tidak menolak plus-tag dan subdomain.
 Tolak usulan temuan 5: prioritaskan pengujian jalur kegagalan penyimpanan pada lapisan data daripada mengulang test forwarding tanpa jalur eksekusi berbeda.
+
+## Refactoring, Testing, dan Error Umum
+
+1. Refactoring Challenge
+    a. Penerapan saran review sejawat dan AI:
+
+   - Menambahkan komentar penjelasan format dasar email pada use case Login (lib/features/auth/domain/usecases/login.dart) untuk memperjelas aturan regex bagi reviewer.
+
+   - Menambahkan unit test password lebih dari enam karakter (panjang 7 karakter) pada test/login_test.dart untuk mengunci batasan minimal agar tidak terjadi regresi menjadi aturan tepat enam karakter.
+
+   - Menambahkan unit test untuk variasi email valid (subdomain, plus-tag +, dan titik pada local-part) guna memastikan validator tidak menolak format email yang sah.
+
+    b. Otomatisasi style dengan CI:
+
+   - Menambahkan step dart format --output=none --set-exit-if-changed . ke dalam workflow CI GitHub Actions (.github/workflows/ci.yml).
+
+   - Seluruh 31 file telah diformat menggunakan dart format . sehingga jika terdapat kode kotor yang didorong ke pull request, CI akan otomatis menolak (fail) sebelum tahap review manusia.
+
+    c. Strategi pemecahan PR besar (> 300 baris):
+
+   - Menghindari penggabungan banyak layer dalam satu PR besar dengan memecahnya menjadi 2–3 PR berurutan yang masing-masing dapat direview dalam waktu < 15 menit:
+
+     - PR 1: Kontrak domain & use case beserta unit test (< 150 baris).
+
+     - PR 2: Implementasi data layer (remote/local data source & repository) (< 200 baris).
+
+     - PR 3: Integrasi presentation layer (UI, provider, dan routing) (< 150 baris).
+
+   - PR yang dikerjakan pada tahap ini (feature/refactoring-ci-and-error-handling) menjaga prinsip PR kecil dengan cakupan perubahan terfokus hanya pada 3 berkas (~45 baris).
+
+
+2. Testing: Review Tanpa Dijalankan Tidak Sah
+
+Setiap PR yang mengubah perilaku wajib menyertakan bukti uji mesin dan langkah manual:
+
+- dart format: 31 berkas diperiksa, 0 changed.
+
+- flutter analyze: No issues found! (0 issues).
+
+- flutter test: 31 test lulus (All tests passed!), bertambah 4 test dari baseline sebelumnya.
+
+Berikut merupakan bukti pemeriksaan flutter analyze:
+
+![Hasil flutter analyze](screenshots/refactor_flutterAnalyze.png)
+
+Berikut merupakan bukti pemeriksaan flutter test:
+
+![Hasil flutter test](screenshots/refactor_flutterTest.png)
+
+Langkah pengujian manual untuk boundary pada login.
+
+![Langkah pengujian manual](screenshots/refactor_loginGagal.png)
+
+![Langkah pengujian manual](screenshots/refactor_loginGagal2.png)
+
+
+## Mini Project
+
+1. Buat minimal 1 issue + 1 PR kecil yang di-merge via review sejawat (branch feature/ → develop).
+
+2. Sertakan template PR lengkap: masalah, solusi, cara uji, dan screenshot.
+
+3. Bukti mesin hijau: hasil flutter analyze + flutter test di README.
+
+4. Dokumentasikan prompt AI, tabel usulan-vs-keputusan-final, dan bukti penolakan/penerimaan di docs/.
+
+5. Push ke folder portfolio 08-week-8-mid-project-review/ dengan struktur docs/, README.md, dan screenshots/. README menjelaskan status paruh semester, peta issue/PR, fitur utama, stack teknologi, cara menjalankan, dan hasil yang dicapai.
+
+
+## Refleksi
+
+1. Apa beda LGTM buta dengan approve yang bertanggung jawab? Apa risikonya bagi tim?
+
+Jawaban: LGTM buta adalah persetujuan yang diberikan secara dangkal hanya dengan membaca sekilas diff kode di browser tanpa memahami konteks issue, tanpa memeriksa arsitektur, dan tanpa melakukan checkout lokal untuk menjalankan pengujian. Sebaliknya, approve yang bertanggung jawab menuntut verifikasi menyeluruh: memastikan logika bisnis benar, batasan arsitektur (clean architecture) tidak dilanggar, static analysis dan test lokal berjalan hijau, serta pengujian manual dilakukan. Risikonya bagi tim jika LGTM buta dibiarkan adalah lolosnya bug kritis dan celah keamanan ke branch utama, terjadinya regresi pada fitur yang sebelumnya stabil, serta akumulasi technical debt yang memperlambat laju pengembangan.
+
+2. Kapan komentar wajib berstatus request changes, dan kapan cukup saran?
+
+Jawaban: Komentar wajib berstatus Request Changes apabila terdapat temuan yang bersifat blocker, seperti kegagalan logika bisnis, pelanggaran dependency rule (misalnya domain mengimpor layer data atau framework Flutter), ketiadaan automated test untuk jalur kritis baru, atau rusaknya pipeline CI. Perubahan tersebut mutlak tidak boleh di-merge sebelum diperbaiki. Sebaliknya, komentar cukup berstatus Saran (Comment/Nitpick) untuk hal-hal non-fungsional minor, seperti usulan refactoring nama variabel agar lebih deskriptif, penambahan komentar dokumentasi penjelas, atau optimasi kecil yang tidak memengaruhi kebenaran aplikasi dan tidak menghalangi rilis saat itu.
+
+3. Bagian mana dari review AI yang Anda tolak atau sederhanakan, dan mengapa?
+
+Jawaban: Bagian review AI yang ditolak adalah usulan Temuan 5 dari Codex mengenai penambahan unit test penerusan failure khusus subtipe LocalFailure pada use case Login. Penolakan ini didasarkan pada alasan teknis bahwa Login meneruskan hasil dari repository secara langsung tanpa percabangan (branching) berdasarkan subtipe Failure, sehingga penambahan test forwarding tidak menguji jalur eksekusi baru. Pengujian pemetaan dan penanganan kegagalan penyimpanan lebih tepat dilakukan pada lapisan data (AuthRepositoryImpl). Selain itu, asumsi AI terkait dependency SQLite disederhanakan/diabaikan karena project menggunakan Dio dan mock repository.
+
+4. Satu hal konkret yang Anda perbaiki setelah review sejawat — apa dampaknya?
+
+Jawaban: Perbaikan konkret yang dilakukan adalah menambahkan boundary test untuk password lebih dari enam karakter (panjang 7 karakter) dan variasi email valid (subdomain serta tag +) pada test/login_test.dart, dilengkapi komentar format dasar email pada use case Login. Dampaknya adalah aturan validasi minimal enam karakter terlindungi dari risiko regresi (misalnya perubahan keliru menjadi "harus tepat 6 karakter"), format email pengguna yang sah dipastikan tetap diterima, serta keterbacaan kode meningkat sehingga mempermudah proses review berikutnya.
