@@ -95,13 +95,7 @@ Berikut implementasi fungsi filterNotes pada lapisan data domain murni (lib/data
 
 ```dart
 List<Note> filterNotes(List<Note> notes, String query) {
-  final trimmed = query.trim().toLowerCase();
-  if (trimmed.isEmpty) {
-    return notes;
-  }
-  return notes
-      .where((note) => note.title.toLowerCase().contains(trimmed))
-      .toList();
+  return const SearchNotes().call(notes: notes, query: query);
 }
 ```
 
@@ -135,14 +129,84 @@ Verifikasi berhasil menemukan satu halusinasi fatal dan satu kelemahan logika da
 
 ---
 
+## Praktikum 3: Debug dan Refactor
+
+Praktikum 3 melakukan proses debugging dengan pendekatan test merah (red test), mengisolasi logika ke use case murni, dan merefaktor arsitektur kode ke layer yang tepat dengan fungsi modular berukuran di bawah 40 baris.
+
+### 1. Debug dengan Test Merah
+
+1. Reproduksi Bug:
+   Langkah: Pengguna melakukan pencarian dengan kata kunci yang terdapat pada isi catatan (body) atau mengetik kata kunci dengan spasi di awal dan akhir (misal '   flutter   ').
+   Input pemicu: Pencarian kata kunci pada atribut body dan query dengan whitespace.
+   Hasil awal: Pencarian gagal menemukan catatan (empty state) karena usulan awal AI hanya mencocokkan atribut title secara ketat tanpa pengecekan body dan tanpa normalisasi trim.
+
+2. Isolasi Logika:
+   Aturan penyaringan dipisahkan dari presentation layer dan dipindahkan ke use case domain murni SearchNotes pada lib/domain/usecases/search_notes.dart.
+
+3. Test Merah (Red Test):
+   Dibuat unit test yang mengekspos kegagalan tersebut sebelum perbaikan:
+   - Test mencari kata kunci pada isi body catatan.
+   - Test menangani spasi berlebih pada awal dan akhir query.
+   Saat pertama kali dijalankan terhadap logika lama, test ini gagal (merah).
+
+4. Perbaikan Kecil dan Test Hijau:
+   Logika pada SearchNotes diperbaiki dengan menambahkan normalisasi trim() dan pencocokan ganda pada title dan body:
+   final titleMatch = note.title.toLowerCase().contains(trimmed);
+   final bodyMatch = note.body.toLowerCase().contains(trimmed);
+   return titleMatch || bodyMatch;
+   Setelah perbaikan kecil ini, seluruh test suite langsung lulus (hijau).
+
+5. Pencatatan Akar Masalah:
+   Akar masalah didokumentasikan pada docs/ai-log.md, yaitu asumsi awal AI yang membatasi filter hanya pada satu field tanpa memvalidasi kebutuhan pencarian konten catatan.
+
+### 2. Refactor ke Layer yang Benar
+
+Arsitektur project ditata ulang mengikuti hierarki Clean Architecture:
+- Widget (UI saja): NotesPage dipecah menjadi komponen modular (_NotesSearchBar, _NotesContent, _NotesEmptyState) tanpa logika query maupun database.
+- Notifier (State saja): SearchQueryNotifier bertugas mengelola state teks pencarian secara reaktif.
+- Use Case (Aturan filter): SearchNotes bertanggung jawab penuh atas aturan penyaringan catatan secara murni.
+- Repository (Data access): NoteRepository bertugas menangani akses SQLite dan komunikasi jaringan.
+
+Pemeriksaan ukuran fungsi memastikan seluruh fungsi pada NotesPage berada di bawah 40 baris, dan tidak terdapat pemanggilan database secara langsung dari widget.
+
+### 3. Kode Hasil Refactoring Use Case
+
+Berikut implementasi use case SearchNotes (lib/domain/usecases/search_notes.dart):
+
+```dart
+import '../../data/local/note.dart';
+
+class SearchNotes {
+  const SearchNotes();
+
+  List<Note> call({
+    required List<Note> notes,
+    required String query,
+  }) {
+    final trimmed = query.trim().toLowerCase();
+    if (trimmed.isEmpty) {
+      return notes;
+    }
+
+    return notes.where((note) {
+      final titleMatch = note.title.toLowerCase().contains(trimmed);
+      final bodyMatch = note.body.toLowerCase().contains(trimmed);
+      return titleMatch || bodyMatch;
+    }).toList();
+  }
+}
+```
+
+---
+
 ## Hasil Pengujian dan Tampilan Aplikasi
 
 ### 1. Bukti Pemeriksaan Mesin
 
 Pemeriksaan dijalankan pada direktori project 05-week-5-local-storage-offline-first:
-- dart format: 20 file diperiksa, 0 changed.
+- dart format: 21 file diperiksa, 0 changed.
 - flutter analyze: No issues found! (0 issues).
-- flutter test: Seluruh 14 test lulus (All tests passed!), mencakup 4 test bawaan dan 10 test pencarian, provider, serta widget test interaktif.
+- flutter test: Seluruh 17 test lulus (All tests passed!), mencakup 4 test bawaan dan 13 test pencarian, provider, usecase, serta widget test interaktif.
 
 ### 2. Tampilan Hasil Uji Manual
 

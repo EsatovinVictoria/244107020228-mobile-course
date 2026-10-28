@@ -1,3 +1,4 @@
+import 'package:week5_offline_notes/domain/usecases/search_notes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,6 +203,41 @@ void main() {
 
     test('query kosong kembalikan seluruh catatan', () {
       expect(filterNotes(list, ''), hasLength(3));
+    });
+  });
+
+  group('SearchNotes UseCase Domain Test', () {
+    const useCase = SearchNotes();
+    final sample = [
+      Note(
+        id: 1,
+        title: 'Rapat Organisasi',
+        body: 'Membahas evaluasi mingguan dan anggaran',
+        updatedAt: DateTime(2026, 10, 1),
+      ),
+      Note(
+        id: 2,
+        title: 'Belajar Flutter',
+        body: 'Arsitektur Clean Architecture dan Riverpod',
+        updatedAt: DateTime(2026, 10, 2),
+      ),
+    ];
+
+    test('mencari kata kunci pada isi body catatan', () {
+      final results = useCase(notes: sample, query: 'anggaran');
+      expect(results, hasLength(1));
+      expect(results.first.id, 1);
+    });
+
+    test('menangani spasi berlebih pada awal dan akhir query', () {
+      final results = useCase(notes: sample, query: '   flutter   ');
+      expect(results, hasLength(1));
+      expect(results.first.id, 2);
+    });
+
+    test('query kosong mengembalikan list lengkap', () {
+      final results = useCase(notes: sample, query: '   ');
+      expect(results, hasLength(2));
     });
   });
 }

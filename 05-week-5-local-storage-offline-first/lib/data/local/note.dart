@@ -1,3 +1,5 @@
+import '../../domain/usecases/search_notes.dart';
+
 class Note {
   const Note({
     this.id,
@@ -35,11 +37,5 @@ class Note {
 }
 
 List<Note> filterNotes(List<Note> notes, String query) {
-  final trimmed = query.trim().toLowerCase();
-  if (trimmed.isEmpty) {
-    return notes;
-  }
-  return notes
-      .where((note) => note.title.toLowerCase().contains(trimmed))
-      .toList();
+  return const SearchNotes().call(notes: notes, query: query);
 }
