@@ -235,14 +235,61 @@ Pemeriksaan dan verifikasi terhadap temuan AI menghasilkan keputusan teknis beri
 
 ---
 
+## Refactoring, Testing, dan Error Umum
+
+### 1. Refactoring Challenge
+
+1. Memperkecil hasil kode AI di atas 80 baris menjadi fungsi dan use case kecil yang modular. File notes_page.dart dipecah menjadi komponen-komponen terpisah (_NotesSearchBar, _NotesContent, _NotesEmptyState) dengan panjang tiap fungsi di bawah 40 baris.
+2. Memindahkan logika filter pencarian dari widget ke use case domain murni SearchNotes (lib/domain/usecases/search_notes.dart) sehingga terisolasi dan mudah diuji secara independen.
+3. Menghapus ketergantungan lintas layer. Entitas domain dan use case diverifikasi steril tanpa mengimpor paket Flutter, Dio, maupun SQLite.
+
+### 2. Testing Terfokus
+
+Pengujian otomatis dijalankan secara spesifik pada test suite search_filter_test.dart:
+
+Perintah uji:
+flutter test test/search_filter_test.dart
+
+Cakupan pengujian pada test/search_filter_test.dart:
+- Test filter mengabaikan huruf besar/kecil (case-insensitive).
+- Test query tidak cocok mengembalikan list kosong (empty state logic).
+- Test filter mencocokkan kata kunci pada isi body catatan.
+- Test filter mengabaikan spasi berlebih pada awal dan akhir query.
+- Test filter query kosong mengembalikan seluruh catatan.
+- Test filter aman terhadap catatan dengan body kosong.
+- Widget test interaktif pembuktian tampilan Empty State saat pencarian tidak cocok beserta pemulihan data saat tombol clear ditekan.
+
+Hasil pengujian search_filter_test.dart: 7 test lulus (All tests passed!).
+
+### 3. Error Umum dan Solusinya
+
+Berikut merupakan pemetaan gejala error umum yang sering muncul saat bekerja dengan asisten AI beserta solusi teknis yang diterapkan:
+
+| Gejala | Penyebab Umum | Solusi yang Diterapkan |
+| --- | --- | --- |
+| Method tidak ada saat kompilasi | Halusinasi API atau package kadaluarsa | Periksa ketersediaan method melalui autocomplete IDE dan dokumentasi resmi pub.dev serta pubspec.lock. |
+| Import lintas layer (domain import Flutter/Dio/SQLite) | Konteks prompt kurang spesifik | Tegaskan batasan arsitektur pada prompt dan refactor kode ke class use case murni. |
+| Seluruh test langsung merah | Instruksi prompt terlalu besar dan rumit | Pecah tugas menjadi satu fitur kecil dengan satu test case pembukti terlebih dahulu. |
+| Prompt perbaikan diulang-ulang tanpa hasil | Tanpa isolasi dan reproduksi masalah konkret | Tuliskan langkah reproduksi input pemicu dan buat unit test merah pembukti sebelum meminta perbaikan. |
+| Developer tidak mampu menjelaskan kode | Menerima kode AI mentah-mentah (vibe coding) | Baca ulang baris demi baris, sederhanakan logika, dan buang kode asing yang tidak dipahami. |
+
+### 4. Checklist Verifikasi Mandiri
+
+- [x] Prompt disusun dengan Formula 5 Slot dan konteks lengkap terdokumentasi di docs/ai-log.md.
+- [x] flutter analyze bersih (0 warning/error), dart format rapi, dan seluruh test suite flutter test hijau.
+- [x] Minimal 1 temuan AI dibuktikan benar (kueri SQL pencarian body) dan 1 temuan ditolak beralasan teknis (FTS5 / Dio remote search).
+- [x] Developer menguasai alur kerja Clean Architecture dan mampu menjelaskan setiap baris keputusan kode tanpa membuka AI.
+
+---
+
 ## Hasil Pengujian dan Tampilan Aplikasi
 
 ### 1. Bukti Pemeriksaan Mesin
 
 Pemeriksaan dijalankan pada direktori project 05-week-5-local-storage-offline-first:
-- dart format: 21 file diperiksa, 0 changed.
+- dart format: 22 file diperiksa, 0 changed.
 - flutter analyze: No issues found! (0 issues).
-- flutter test: Seluruh 19 test lulus (All tests passed!), mencakup 4 test bawaan dan 15 test pencarian, provider, usecase, boundary test, serta widget test interaktif.
+- flutter test: Seluruh 26 test lulus (All tests passed!), mencakup 4 test bawaan, 15 test pada note_search_test.dart, dan 7 test pada search_filter_test.dart.
 
 ### 2. Tampilan Hasil Uji Manual
 

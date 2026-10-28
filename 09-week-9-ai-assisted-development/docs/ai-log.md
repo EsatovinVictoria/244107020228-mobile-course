@@ -14,6 +14,7 @@ Dokumen ini mencatat seluruh eksperimen interaksi AI dalam pengembangan, verifik
   - `lib/data/repositories/note_repository.dart`
   - `lib/pages/notes_page.dart` (refactored into modular widgets < 40 lines)
   - `test/note_search_test.dart`
+  - `test/search_filter_test.dart`
 
 ---
 
@@ -205,36 +206,62 @@ Beri 3 temuan + level blocker/saran + alasan.
 
 ---
 
-## 8. Bukti Verifikasi Mesin Akhir
+## 8. Refactoring Challenge, Testing, dan Error Handling (Bagian 7)
+
+### 1. Refactoring Hasil AI ke Modular Use Case
+- File `notes_page.dart` yang awalnya memuat logika dialog, sync, dan search bar dipecah menjadi widget modular terisolasi: `_NotesSearchBar`, `_NotesContent`, dan `_NotesEmptyState`.
+- Seluruh fungsi dipastikan berada di bawah 40 baris.
+- Aturan pencarian dipusatkan secara eksklusif pada usecase `SearchNotes` (`lib/domain/usecases/search_notes.dart`).
+- Tidak ada panggilan database langsung dari widget UI.
+
+### 2. Pengujian Terfokus `search_filter_test.dart`
+Pengujian khusus dibuat pada `test/search_filter_test.dart` untuk menguji:
+1. `filter abaikan huruf besar/kecil`: Lulus.
+2. `query tak cocok kembalikan kosong`: Lulus.
+3. `filter mencocokkan kata kunci pada body catatan`: Lulus.
+4. `filter mengabaikan spasi berlebih pada awal dan akhir query`: Lulus.
+5. `filter query kosong mengembalikan seluruh catatan`: Lulus.
+6. `filter aman terhadap catatan dengan body kosong`: Lulus.
+7. `Widget Test Empty State`: Membuktikan tampilan empty state secara visual saat query tidak cocok dan pemulihan data saat tombol clear ditekan.
+
+Hasil:
+```text
+flutter test test/search_filter_test.dart
+00:01 +7: All tests passed!
+```
+
+### 3. Error Umum dan Solusinya
+
+| Gejala | Penyebab Umum | Solusi yang Diterapkan |
+| :--- | :--- | :--- |
+| Method tidak ada saat kompilasi | Halusinasi API / versi usang | Cek dokumentasi resmi pub.dev + autocomplete IDE; refactor `StateProvider` ke `NotifierProvider`. |
+| Import lintas layer (domain import Flutter/Dio/SQLite) | Konteks prompt kurang spesifik | Tegaskan batasan arsitektur Clean Architecture pada prompt; isolasi fungsi murni ke domain. |
+| Seluruh test langsung merah | Prompt terlalu besar dan rumit | Pecah instruksi menjadi 1 fitur kecil + 1 test pembukti. |
+| Prompt perbaikan diulang-ulang tanpa hasil | Tanpa reproduksi masalah konkret | Tulis langkah reproduksi pemicu bug + buat red test sebelum meminta perbaikan. |
+| Developer tidak bisa menjelaskan kode | Menerima kode AI mentah (vibe coding) | Baca ulang baris per baris, sederhanakan logika, dan buang kode yang tidak dipahami. |
+
+---
+
+## 9. Bukti Verifikasi Mesin Akhir
 
 ### 1. Static Analysis (`flutter analyze`)
 ```text
 Analyzing 05-week-5-local-storage-offline-first...              
-No issues found! (ran in 11.0s)
+No issues found! (ran in 8.3s)
 ```
 
 ### 2. Formatter (`dart format`)
 ```text
-Formatted 21 files (0 changed) in 0.08 seconds.
+Formatted 22 files (0 changed) in 0.10 seconds.
 ```
 
 ### 3. Automated Tests (`flutter test`)
 ```text
 00:00 +0: Search Notes Repository & Provider Logic searchNotes mengembalikan seluruh catatan jika query kosong
 00:00 +1: Search Notes Repository & Provider Logic searchNotes menyaring catatan berdasarkan kecocokan judul
-00:00 +2: Search Notes Repository & Provider Logic searchNotes menyaring catatan berdasarkan kecocokan isi body
-00:00 +3: Search Notes Repository & Provider Logic searchNotes aman terhadap catatan dengan body kosong
-00:00 +4: Search Notes Repository & Provider Logic searchNotes bersifat case-insensitive
-00:00 +5: Search Notes Repository & Provider Logic searchNotes menghasilkan list kosong jika kata kunci tidak ditemukan
-00:00 +6: Search Notes Repository & Provider Logic filteredNotesProvider bereaksi terhadap perubahan searchQueryProvider
-00:00 +7: NotesPage Search Widget Test menampilkan search field dan menyaring tampilan catatan secara interaktif
 ...
-00:03 +18: filterNotes Pure Domain Function Test filter abaikan huruf besar/kecil
-00:03 +19: filterNotes Pure Domain Function Test query tak cocok kembalikan kosong
-00:03 +20: filterNotes Pure Domain Function Test query kosong kembalikan seluruh catatan
-00:03 +21: SearchNotes UseCase Domain Test mencari kata kunci pada isi body catatan
-00:03 +22: SearchNotes UseCase Domain Test menangani spasi berlebih pada awal dan akhir query
-00:03 +23: SearchNotes UseCase Domain Test query kosong mengembalikan list lengkap
-00:04 +19: All tests passed!
+00:02 +18: Widget Test Empty State menampilkan widget empty state saat pencarian tidak cocok
+...
+00:02 +26: All tests passed!
 ```
-Total **19 pengujian otomatis lulus 100%**.
+Total **26 pengujian otomatis lulus 100%**.
