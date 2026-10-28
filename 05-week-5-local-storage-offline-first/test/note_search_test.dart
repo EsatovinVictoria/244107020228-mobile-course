@@ -1,9 +1,9 @@
-import 'package:week5_offline_notes/domain/usecases/search_notes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:week5_offline_notes/data/local/note.dart';
 import 'package:week5_offline_notes/data/repositories/note_repository.dart';
+import 'package:week5_offline_notes/domain/usecases/search_notes.dart';
 import 'package:week5_offline_notes/pages/notes_page.dart';
 
 class SearchFakeNoteRepository extends NoteRepository {
@@ -19,7 +19,11 @@ class SearchFakeNoteRepository extends NoteRepository {
   Future<List<Note>> searchNotes(String query) async {
     final trimmed = query.trim().toLowerCase();
     if (trimmed.isEmpty) return items;
-    return items.where((n) => n.title.toLowerCase().contains(trimmed)).toList();
+    return items.where((n) {
+      final titleMatch = n.title.toLowerCase().contains(trimmed);
+      final bodyMatch = n.body.toLowerCase().contains(trimmed);
+      return titleMatch || bodyMatch;
+    }).toList();
   }
 
   @override
@@ -47,6 +51,12 @@ void main() {
         body: 'React dan Node.js',
         updatedAt: DateTime(2026, 10, 3),
       ),
+      Note(
+        id: 4,
+        title: 'Catatan Singkat',
+        body: '',
+        updatedAt: DateTime(2026, 10, 4),
+      ),
     ];
 
     test(
@@ -54,7 +64,7 @@ void main() {
       () async {
         final repo = SearchFakeNoteRepository(items: sampleNotes);
         final results = await repo.searchNotes('');
-        expect(results.length, 3);
+        expect(results.length, 4);
       },
     );
 
@@ -63,6 +73,23 @@ void main() {
       final results = await repo.searchNotes('Belanja');
       expect(results.length, 1);
       expect(results.first.title, 'Daftar Belanja');
+    });
+
+    test(
+      'searchNotes menyaring catatan berdasarkan kecocokan isi body',
+      () async {
+        final repo = SearchFakeNoteRepository(items: sampleNotes);
+        final results = await repo.searchNotes('kopi');
+        expect(results.length, 1);
+        expect(results.first.id, 2);
+      },
+    );
+
+    test('searchNotes aman terhadap catatan dengan body kosong', () async {
+      final repo = SearchFakeNoteRepository(items: sampleNotes);
+      final results = await repo.searchNotes('Singkat');
+      expect(results.length, 1);
+      expect(results.first.id, 4);
     });
 
     test('searchNotes bersifat case-insensitive', () async {
@@ -94,14 +121,12 @@ void main() {
         );
         addTearDown(container.dispose);
 
-        // Awalnya query kosong
         final initialNotes = await container.read(notesProvider.future);
-        expect(initialNotes.length, 3);
+        expect(initialNotes.length, 4);
 
         final filteredInitial = container.read(filteredNotesProvider);
-        expect(filteredInitial.value?.length, 3);
+        expect(filteredInitial.value?.length, 4);
 
-        // Ubah query menjadi 'Belanja'
         container.read(searchQueryProvider.notifier).setQuery('Belanja');
 
         final filteredResult = container.read(filteredNotesProvider);
@@ -139,43 +164,34 @@ void main() {
           ),
         );
 
-        // Tunggu data notes termuat
         await tester.pumpAndSettle();
 
-        // Memastikan kedua catatan tampil awal
         expect(find.text('Catatan Flutter'), findsOneWidget);
         expect(find.text('Rapat Organisasi'), findsOneWidget);
 
-        // Cari TextField pencarian berdasarkan Key
         final searchField = find.byKey(const Key('search_notes_field'));
         expect(searchField, findsOneWidget);
 
-        // Ketik 'flutter' di kotak pencarian
         await tester.enterText(searchField, 'flutter');
         await tester.pumpAndSettle();
 
-        // Hanya Catatan Flutter yang tampil
         expect(find.text('Catatan Flutter'), findsOneWidget);
         expect(find.text('Rapat Organisasi'), findsNothing);
 
-        // Ketik kata kunci yang tidak ada: 'NonExistentNote'
         await tester.enterText(searchField, 'NonExistentNote');
         await tester.pumpAndSettle();
 
-        // Memastikan Empty State pencarian muncul
         expect(
           find.text('Tidak ada catatan dengan kata kunci tersebut.'),
           findsOneWidget,
         );
         expect(find.byIcon(Icons.search_off), findsOneWidget);
 
-        // Tekan tombol clear (Icons.clear)
         final clearButton = find.byIcon(Icons.clear);
         expect(clearButton, findsOneWidget);
         await tester.tap(clearButton);
         await tester.pumpAndSettle();
 
-        // Kedua catatan muncul kembali
         expect(find.text('Catatan Flutter'), findsOneWidget);
         expect(find.text('Rapat Organisasi'), findsOneWidget);
       },
