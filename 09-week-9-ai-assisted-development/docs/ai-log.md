@@ -265,3 +265,35 @@ Formatted 22 files (0 changed) in 0.10 seconds.
 00:02 +26: All tests passed!
 ```
 Total **26 pengujian otomatis lulus 100%**.
+
+
+---
+
+## 10. Refleksi dan Evaluasi Pembelajaran (Bagian 8)
+
+### 1. Satu Halusinasi AI yang Ditemukan dan Cara Membuktikannya
+- **Temuan Halusinasi:** AI mengusulkan penggunaan StateProvider dari package lutter_riverpod untuk mendeklarasikan state pencarian searchQueryProvider.
+- **Cara Membuktikan:**
+  1. *Pemeriksaan Versi Dependensi:* Berkas pubspec.yaml dan pubspec.lock menunjukkan project menggunakan lutter_riverpod: ^3.4.3.
+  2. *Static Analysis & Kompilasi:* Saat kode dijalankan, compiler Dart menghasilkan error fatal Error: Method not found: StateProvider.
+  3. *Autocomplete IDE:* IDE menandai StateProvider tidak tersedia dalam package lutter_riverpod v3 dan merekomendasikan migrasi ke NotifierProvider / Notifier<T>.
+
+### 2. Prompt yang Paling Membantu dan Hal yang Diubah
+- **Prompt Paling Membantu:** Prompt terstruktur berbasis Formula 5 Slot (Peran, Konteks, Tugas, Batas, Output).
+- **Perubahan yang Dilakukan:** Mengubah prompt umum (*vibe coding*) menjadi prompt berkonteks terarah:
+  - Menegaskan arsitektur Clean Architecture (*feature-first: presentation -> domain <- data*).
+  - Melarang pemanggilan database/SQLite langsung dari widget UI.
+  - Membatasi state management menggunakan NotifierProvider (Riverpod 3.x).
+  - Mensyaratkan penyediaan empty state dan unit/widget test pembukti.
+
+### 3. Refactor yang Dilakukan pada Kode AI
+- **Isolasi Domain Use Case:** Memindahkan aturan filter pencarian yang awalnya ditaruh AI di dalam widget UI atau dipanggil secara synchronous pada repository ke dalam usecase murni SearchNotes (lib/domain/usecases/search_notes.dart).
+- **Dekomposisi Widget UI:** Memecah NotesPage yang panjang menjadi komponen-komponen berukuran kecil di bawah 40 baris (_NotesSearchBar, _NotesContent, _NotesEmptyState).
+- **Sterilisasi Dependency:** Memastikan lapisan domain tidak mengimpor package lutter, sqflite, maupun dio.
+
+### 4. Keputusan Terima/Tolak yang Paling Sulit
+- **Keputusan:** Menolak rekomendasi AI (Temuan 3 pada AI Challenge) untuk mengimplementasikan SQLite FTS5 (Full-Text Search virtual table) dan remote search via Dio.
+- **Alasan Kesulitan & Pertimbangan Teknis:**
+  - Secara teori, FTS5 menawarkan fungsionalitas pencarian teks tingkat lanjut dan indexing fuzzy yang canggih.
+  - Namun, secara praktis, aplikasi ini merupakan personal notes lokal berbobot ringan. Menambahkan FTS5 membutuhkan migrasi skema tabel virtual yang rentan merusak data lokal yang ada serta menambah beban arsitektur (*over-engineering*).
+  - Evaluasi performa membuktikan query LIKE dan in-memory filter pada use case domain berjalan instan (< 2ms) dengan kode yang jauh lebih sederhana, bersih, dan mudah diuji.
