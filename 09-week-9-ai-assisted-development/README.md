@@ -199,6 +199,42 @@ class SearchNotes {
 
 ---
 
+## AI Challenge
+
+### 1. Prompt Challenge Review
+
+Prompt yang digunakan untuk meminta AI mereview kode pencarian:
+
+Review kode search Flutter ini sebagai senior dev.
+Konteks: feature-first (presentation->domain<-data),
+Riverpod, SQLite + Dio.
+Fokus: kebenaran, arsitektur, test. Abaikan style.
+Beri 3 temuan + level blocker/saran + alasan.
+
+### 2. Ringkasan Tiga Temuan Review AI
+
+1. Temuan 1 (Level Blocker): Inkonsistensi pencarian antara layer SQL dan in-memory. Pada use case domain, pencarian mencakup atribut title dan body. Namun pada NoteRepository.searchNotes, query SQL SQLite hanya memeriksa kolom title. Hal ini menyebabkan inkonsistensi data jika query database langsung dipanggil.
+2. Temuan 2 (Level Saran): Kurangnya pengujian boundary pada catatan dengan body kosong (body: ''). Test yang ada belum menguji apakah catatan tanpa body tetap aman dicari tanpa memicu error atau string null.
+3. Temuan 3 (Level Saran): Rekomendasi menambahkan tabel virtual SQLite FTS5 (Full-Text Search) atau endpoint remote search via Dio untuk pencarian fuzzy berskala besar.
+
+### 3. AI Verification Checklist dan Keputusan
+
+Pemeriksaan dan verifikasi terhadap temuan AI menghasilkan keputusan teknis berikut:
+
+| No | Temuan AI dan Level | Hasil Verifikasi | Keputusan Final dan Alasan Teknis |
+| --- | --- | --- | --- |
+| 1 | Blocker: Inkonsistensi filter SQL vs in-memory. | Terbukti. Pemeriksaan pada note_repository.dart menunjukkan query SQL hanya mencari pada kolom title, berbeda dengan use case domain yang memeriksa title dan body. | Diterima dan Diperbaiki. Query SQL pada NoteRepository.searchNotes diperbarui menjadi LOWER(title) LIKE ? OR LOWER(body) LIKE ? agar kedua layer konsisten. |
+| 2 | Saran: Kurang pengujian boundary body kosong. | Terbukti celah cakupan test. Unit test sebelumnya hanya menguji catatan yang memiliki isi body lengkap. | Diterima dan Ditambahkan Test. Dibuat unit test baru untuk memastikan catatan dengan body kosong tetap aman dicari berdasarkan judul. |
+| 3 | Saran: Tambahkan FTS5 atau remote search Dio. | Tidak relevan dengan skala aplikasi. Aplikasi ini berfokus pada offline-first personal notes dengan jumlah catatan lokal ringan. | Ditolak. Penambahan virtual table FTS5 atau remote search menambah kompleksitas skema migrasi database dan dependensi jaringan yang tidak diperlukan pada skala data lokal (over-engineering). |
+
+### 4. Keputusan Tindak Lanjut Tiap Berkas
+
+- lib/data/repositories/note_repository.dart: Terima dan perbaiki. Menyelaraskan query SQL dengan menambahkan pencarian pada kolom body.
+- test/note_search_test.dart: Terima dan refactor. Menambahkan pengujian boundary untuk pencarian isi body dan catatan dengan body kosong.
+- lib/domain/usecases/search_notes.dart: Pertahankan kode yang ada. Use case domain sudah murni dan memenuhi kriteria Clean Architecture.
+
+---
+
 ## Hasil Pengujian dan Tampilan Aplikasi
 
 ### 1. Bukti Pemeriksaan Mesin
@@ -206,7 +242,7 @@ class SearchNotes {
 Pemeriksaan dijalankan pada direktori project 05-week-5-local-storage-offline-first:
 - dart format: 21 file diperiksa, 0 changed.
 - flutter analyze: No issues found! (0 issues).
-- flutter test: Seluruh 17 test lulus (All tests passed!), mencakup 4 test bawaan dan 13 test pencarian, provider, usecase, serta widget test interaktif.
+- flutter test: Seluruh 19 test lulus (All tests passed!), mencakup 4 test bawaan dan 15 test pencarian, provider, usecase, boundary test, serta widget test interaktif.
 
 ### 2. Tampilan Hasil Uji Manual
 
