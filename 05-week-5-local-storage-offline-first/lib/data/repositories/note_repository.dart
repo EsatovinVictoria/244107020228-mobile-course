@@ -69,7 +69,7 @@ class NoteRepository {
   }
 
   Future<List<Note>> searchNotes(String query) async {
-    final trimmed = query.trim();
+    final trimmed = query.trim().toLowerCase();
     if (trimmed.isEmpty) {
       return fetchNotes();
     }
@@ -77,8 +77,8 @@ class NoteRepository {
     final db = await _openDb();
     final rows = await db.query(
       'notes',
-      where: 'LOWER(title) LIKE ?',
-      whereArgs: ['%%'],
+      where: 'LOWER(title) LIKE ? OR LOWER(body) LIKE ?',
+      whereArgs: ['%$trimmed%', '%$trimmed%'],
       orderBy: 'updated_at DESC',
     );
     return rows.map(Note.fromMap).toList();

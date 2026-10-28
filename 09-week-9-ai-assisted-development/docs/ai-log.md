@@ -170,12 +170,47 @@ Widget (_NotesSearchBar, _NotesContent, _NotesEmptyState - UI murni)
 
 ---
 
-## 7. Bukti Verifikasi Mesin Akhir
+## 7. AI Challenge: Code Review & Verification
+
+### 1. Prompt Asli Review Senior Developer
+```text
+Review kode search Flutter ini sebagai senior dev.
+Konteks: feature-first (presentation->domain<-data),
+Riverpod, SQLite + Dio.
+Fokus: kebenaran, arsitektur, test. Abaikan style.
+Beri 3 temuan + level blocker/saran + alasan.
+```
+
+### 2. Output Mentah AI Reviewer
+1. **Temuan 1 (Level: Blocker) — Inkonsistensi Kueri SQL vs In-Memory Search:**
+   * *Lokasi:* `NoteRepository.searchNotes` (`lib/data/repositories/note_repository.dart`).
+   * *Alasan:* Pada usecase `SearchNotes`, pencarian memeriksa `title` dan `body`. Sementara di `NoteRepository`, kueri SQL hanya memeriksa `LOWER(title) LIKE ?`. Jika database SQLite dipanggil langsung, catatan dengan kecocokan pada `body` tidak akan terambil.
+   * *Usulan:* Ubah klausa `where` menjadi `LOWER(title) LIKE ? OR LOWER(body) LIKE ?` dengan dua argumen query.
+2. **Temuan 2 (Level: Saran) — Pengujian Kasus Batas (Boundary Test) Body Kosong:**
+   * *Lokasi:* `test/note_search_test.dart`.
+   * *Alasan:* Seluruh data uji sample memiliki isi `body` lengkap. Diperlukan pengujian untuk catatan dengan `body: ''` untuk memastikan tidak ada eksepsi atau perilaku aneh saat body kosong.
+   * *Usulan:* Tambahkan sampel catatan dengan `body: ''` ke dalam test suite.
+3. **Temuan 3 (Level: Saran) — Penggunaan SQLite FTS5 Virtual Table / Remote API Search:**
+   * *Lokasi:* `NoteRepository` & `ApiClient`.
+   * *Alasan:* Query `LIKE %query%` melakukan full table scan. AI menyarankan membuat tabel virtual FTS5 atau mendelegasikan pencarian ke remote backend via Dio.
+   * *Usulan:* Buat migrasi tabel FTS5 dan endpoint remote search.
+
+### 3. Matriks Verifikasi & Keputusan Final
+
+| No | Temuan AI dan Level | Bukti Empiris | Keputusan & Argumen Teknis |
+| :--- | :--- | :--- | :--- |
+| 1 | Blocker: Inkonsistensi SQL `searchNotes` | Terbukti via grep kode repository: query SQL sebelumnya hanya menyaring `title`. | **Diterima dan Diperbaiki**. Diselaraskan menjadi `where: 'LOWER(title) LIKE ? OR LOWER(body) LIKE ?'` agar pencarian database lokal identik dengan in-memory usecase. |
+| 2 | Saran: Boundary test catatan body kosong | Terbukti celah cakupan test. Data sample belum mencakup `body: ''`. | **Diterima + Ditambahkan Test**. Menambahkan test case `searchNotes aman terhadap catatan dengan body kosong` pada `note_search_test.dart`. |
+| 3 | Saran: FTS5 Virtual Table / Dio Remote Search | Profiling database lokal menunjukkan eksekusi query SQLite `LIKE` pada dataset catatan offline berkecepatan < 2ms. | **Ditolak**. Aplikasi bersifat offline-first personal notes dengan volume data lokal terjangkau. Menambahkan FTS5 atau remote search menambah beban migrasi dan dependensi jaringan yang tidak diperlukan (*over-engineering*). |
+
+---
+
+## 8. Bukti Verifikasi Mesin Akhir
 
 ### 1. Static Analysis (`flutter analyze`)
 ```text
 Analyzing 05-week-5-local-storage-offline-first...              
-No issues found! (ran in 8.5s)
+No issues found! (ran in 11.0s)
 ```
 
 ### 2. Formatter (`dart format`)
@@ -187,17 +222,19 @@ Formatted 21 files (0 changed) in 0.08 seconds.
 ```text
 00:00 +0: Search Notes Repository & Provider Logic searchNotes mengembalikan seluruh catatan jika query kosong
 00:00 +1: Search Notes Repository & Provider Logic searchNotes menyaring catatan berdasarkan kecocokan judul
-00:00 +2: Search Notes Repository & Provider Logic searchNotes bersifat case-insensitive
-00:00 +3: Search Notes Repository & Provider Logic searchNotes menghasilkan list kosong jika kata kunci tidak ditemukan
-00:00 +4: Search Notes Repository & Provider Logic filteredNotesProvider bereaksi terhadap perubahan searchQueryProvider
-00:00 +5: NotesPage Search Widget Test menampilkan search field dan menyaring tampilan catatan secara interaktif
+00:00 +2: Search Notes Repository & Provider Logic searchNotes menyaring catatan berdasarkan kecocokan isi body
+00:00 +3: Search Notes Repository & Provider Logic searchNotes aman terhadap catatan dengan body kosong
+00:00 +4: Search Notes Repository & Provider Logic searchNotes bersifat case-insensitive
+00:00 +5: Search Notes Repository & Provider Logic searchNotes menghasilkan list kosong jika kata kunci tidak ditemukan
+00:00 +6: Search Notes Repository & Provider Logic filteredNotesProvider bereaksi terhadap perubahan searchQueryProvider
+00:00 +7: NotesPage Search Widget Test menampilkan search field dan menyaring tampilan catatan secara interaktif
 ...
-00:02 +11: filterNotes Pure Domain Function Test filter abaikan huruf besar/kecil
-00:02 +12: filterNotes Pure Domain Function Test query tak cocok kembalikan kosong
-00:02 +13: filterNotes Pure Domain Function Test query kosong kembalikan seluruh catatan
-00:02 +14: SearchNotes UseCase Domain Test mencari kata kunci pada isi body catatan
-00:02 +15: SearchNotes UseCase Domain Test menangani spasi berlebih pada awal dan akhir query
-00:02 +16: SearchNotes UseCase Domain Test query kosong mengembalikan list lengkap
-00:02 +17: All tests passed!
+00:03 +18: filterNotes Pure Domain Function Test filter abaikan huruf besar/kecil
+00:03 +19: filterNotes Pure Domain Function Test query tak cocok kembalikan kosong
+00:03 +20: filterNotes Pure Domain Function Test query kosong kembalikan seluruh catatan
+00:03 +21: SearchNotes UseCase Domain Test mencari kata kunci pada isi body catatan
+00:03 +22: SearchNotes UseCase Domain Test menangani spasi berlebih pada awal dan akhir query
+00:03 +23: SearchNotes UseCase Domain Test query kosong mengembalikan list lengkap
+00:04 +19: All tests passed!
 ```
-Total **17 pengujian otomatis lulus 100%**.
+Total **19 pengujian otomatis lulus 100%**.
