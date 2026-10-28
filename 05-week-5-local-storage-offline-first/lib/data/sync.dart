@@ -8,10 +8,7 @@ import 'repositories/post_repository.dart';
 Future<List<Post>> readCachedPosts() async {
   final db = await openNotesDb();
 
-  final rows = await db.query(
-    'cached_posts',
-    orderBy: 'id ASC',
-  );
+  final rows = await db.query('cached_posts', orderBy: 'id ASC');
 
   return rows.map(Post.fromMap).toList();
 }
@@ -38,10 +35,7 @@ Future<List<Post>> loadPostsCacheFirst(
 }) async {
   final cached = await readCachedPosts();
 
-  refreshPostsInBackground(
-    repository,
-    onCacheUpdated: onCacheUpdated,
-  );
+  refreshPostsInBackground(repository, onCacheUpdated: onCacheUpdated);
 
   return cached;
 }
@@ -66,9 +60,7 @@ Future<int> syncNotes(NoteRepository repository) async {
     return 0;
   }
 
-  await Future.delayed(
-    const Duration(seconds: 1),
-  );
+  await Future.delayed(const Duration(seconds: 1));
 
   await repository.markAllSynced();
 

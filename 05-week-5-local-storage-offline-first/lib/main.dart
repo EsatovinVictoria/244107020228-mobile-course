@@ -11,11 +11,7 @@ void main() async {
   final prefs = PrefsRepository();
   await prefs.markOpenedNow();
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -40,9 +36,7 @@ class MyApp extends ConsumerWidget {
           brightness: Brightness.dark,
         ),
       ),
-      themeMode: (darkMode.value ?? false)
-          ? ThemeMode.dark
-          : ThemeMode.light,
+      themeMode: (darkMode.value ?? false) ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router,
     );
   }

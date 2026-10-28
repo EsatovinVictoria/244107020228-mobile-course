@@ -5,8 +5,9 @@ import '../data/prefs.dart';
 
 final prefsRepositoryProvider = Provider((ref) => PrefsRepository());
 
-final darkModeProvider =
-    AsyncNotifierProvider<DarkModeNotifier, bool>(DarkModeNotifier.new);
+final darkModeProvider = AsyncNotifierProvider<DarkModeNotifier, bool>(
+  DarkModeNotifier.new,
+);
 
 final lastOpenedProvider = FutureProvider<String?>((ref) {
   return ref.watch(prefsRepositoryProvider).getLastOpened();
@@ -14,8 +15,7 @@ final lastOpenedProvider = FutureProvider<String?>((ref) {
 
 class DarkModeNotifier extends AsyncNotifier<bool> {
   @override
-  Future<bool> build() =>
-      ref.watch(prefsRepositoryProvider).getDarkMode();
+  Future<bool> build() => ref.watch(prefsRepositoryProvider).getDarkMode();
 
   Future<void> toggle() async {
     final next = !(state.value ?? false);
@@ -38,9 +38,7 @@ class SettingsPage extends ConsumerWidget {
     final lastOpened = ref.watch(lastOpenedProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pengaturan'),
-      ),
+      appBar: AppBar(title: const Text('Pengaturan')),
       body: ListView(
         children: [
           SwitchListTile(

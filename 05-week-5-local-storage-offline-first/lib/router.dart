@@ -14,17 +14,13 @@ final router = GoRouter(
     GoRoute(
       path: '/note/:id',
       builder: (context, state) {
-        final id = int.tryParse(
-          state.pathParameters['id'] ?? '',
-        );
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
 
         if (id == null) {
           return const NotesPage();
         }
 
-        return NoteDetailPage(
-          noteId: id,
-        );
+        return NoteDetailPage(noteId: id);
       },
     ),
   ],

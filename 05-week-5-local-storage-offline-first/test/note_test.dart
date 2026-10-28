@@ -5,12 +5,8 @@ import 'package:week5_offline_notes/data/repositories/note_repository.dart';
 import 'package:week5_offline_notes/pages/notes_page.dart';
 
 class FakeNoteRepository extends NoteRepository {
-  FakeNoteRepository({
-    this.items = const [],
-    this.throwError = false,
-  }) : super(
-          openDb: () => throw UnimplementedError(),
-        );
+  FakeNoteRepository({this.items = const [], this.throwError = false})
+    : super(openDb: () => throw UnimplementedError());
 
   final List<Note> items;
   final bool throwError;
@@ -26,17 +22,13 @@ class FakeNoteRepository extends NoteRepository {
 
   @override
   Future<int> countDirty() {
-    return Future.value(
-      items.where((n) => n.dirty).length,
-    );
+    return Future.value(items.where((n) => n.dirty).length);
   }
 }
 
 void main() {
   test('fromMap aman terhadap field yang hilang', () {
-    final note = Note.fromMap({
-      'title': 'Belanja',
-    });
+    final note = Note.fromMap({'title': 'Belanja'});
 
     expect(note.title, 'Belanja');
     expect(note.body, '');
@@ -50,9 +42,7 @@ void main() {
       dirty: true,
     );
 
-    final restored = Note.fromMap(
-      note.toMap(),
-    );
+    final restored = Note.fromMap(note.toMap());
 
     expect(restored.dirty, isTrue);
   });
@@ -62,12 +52,7 @@ void main() {
       overrides: [
         noteRepositoryProvider.overrideWithValue(
           FakeNoteRepository(
-            items: [
-              Note(
-                title: 'Tes',
-                updatedAt: DateTime.now(),
-              ),
-            ],
+            items: [Note(title: 'Tes', updatedAt: DateTime.now())],
           ),
         ),
       ],
@@ -83,9 +68,7 @@ void main() {
 
     addTearDown(subscription.close);
 
-    final notes = await container.read(
-      notesProvider.future,
-    );
+    final notes = await container.read(notesProvider.future);
 
     expect(notes.length, 1);
     expect(notes.first.title, 'Tes');
@@ -95,9 +78,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         noteRepositoryProvider.overrideWithValue(
-          FakeNoteRepository(
-            throwError: true,
-          ),
+          FakeNoteRepository(throwError: true),
         ),
       ],
     );
@@ -112,18 +93,11 @@ void main() {
 
     addTearDown(subscription.close);
 
-    await Future<void>.delayed(
-      Duration.zero,
-    );
+    await Future<void>.delayed(Duration.zero);
 
-    final state = container.read(
-      notesProvider,
-    );
+    final state = container.read(notesProvider);
 
     expect(state.hasError, isTrue);
-    expect(
-      state.error.toString(),
-      contains('db locked (simulasi)'),
-    );
+    expect(state.error.toString(), contains('db locked (simulasi)'));
   });
 }

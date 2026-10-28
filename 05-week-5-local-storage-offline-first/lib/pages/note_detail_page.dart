@@ -8,43 +8,27 @@ final noteDetailRepositoryProvider = Provider<NoteRepository>(
   (ref) => NoteRepository(),
 );
 
-final noteDetailProvider =
-    FutureProvider.family<Note?, int>((ref, id) {
-  return ref
-      .watch(noteDetailRepositoryProvider)
-      .fetchNoteById(id);
+final noteDetailProvider = FutureProvider.family<Note?, int>((ref, id) {
+  return ref.watch(noteDetailRepositoryProvider).fetchNoteById(id);
 });
 
 class NoteDetailPage extends ConsumerWidget {
-  const NoteDetailPage({
-    super.key,
-    required this.noteId,
-  });
+  const NoteDetailPage({super.key, required this.noteId});
 
   final int noteId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final noteState = ref.watch(
-      noteDetailProvider(noteId),
-    );
+    final noteState = ref.watch(noteDetailProvider(noteId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Catatan'),
-      ),
+      appBar: AppBar(title: const Text('Detail Catatan')),
       body: noteState.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (error, _) => Center(
-          child: Text('Error: $error'),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(child: Text('Error: $error')),
         data: (note) {
           if (note == null) {
-            return const Center(
-              child: Text('Catatan tidak ditemukan.'),
-            );
+            return const Center(child: Text('Catatan tidak ditemukan.'));
           }
 
           return Padding(
@@ -54,9 +38,7 @@ class NoteDetailPage extends ConsumerWidget {
               children: [
                 Text(
                   note.title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall,
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 16),
 
@@ -64,9 +46,7 @@ class NoteDetailPage extends ConsumerWidget {
 
                 const SizedBox(height: 24),
 
-                Text(
-                  'Updated at: ${note.updatedAt}',
-                ),
+                Text('Updated at: ${note.updatedAt}'),
 
                 const SizedBox(height: 8),
 

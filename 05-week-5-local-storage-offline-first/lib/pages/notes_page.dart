@@ -7,6 +7,7 @@ import '../data/sync.dart';
 import '../providers/offline_provider.dart';
 import 'posts_page.dart';
 import '../widgets/note_tile.dart';
+
 import 'package:go_router/go_router.dart';
 
 final noteRepositoryProvider = Provider<NoteRepository>(
@@ -17,13 +18,32 @@ final notesProvider = FutureProvider<List<Note>>(
   (ref) => ref.watch(noteRepositoryProvider).fetchNotes(),
 );
 
+class SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void setQuery(String value) => state = value;
+  void clear() => state = '';
+}
+
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
+  SearchQueryNotifier.new,
+);
+
+final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
+  final notesState = ref.watch(notesProvider);
+  final query = ref.watch(searchQueryProvider).trim().toLowerCase();
+
+  return notesState.whenData((notes) {
+    if (query.isEmpty) return notes;
+    return notes.where((n) => n.title.toLowerCase().contains(query)).toList();
+  });
+});
+
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
 
-  Future<void> _addNote(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _addNote(BuildContext context, WidgetRef ref) async {
     final titleController = TextEditingController();
     final bodyController = TextEditingController();
 
@@ -37,15 +57,11 @@ class NotesPage extends ConsumerWidget {
             children: [
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Judul',
-                ),
+                decoration: const InputDecoration(labelText: 'Judul'),
               ),
               TextField(
                 controller: bodyController,
-                decoration: const InputDecoration(
-                  labelText: 'Isi',
-                ),
+                decoration: const InputDecoration(labelText: 'Isi'),
               ),
             ],
           ),
@@ -65,10 +81,7 @@ class NotesPage extends ConsumerWidget {
                   return;
                 }
 
-                Navigator.of(dialogContext).pop({
-                  'title': title,
-                  'body': body,
-                });
+                Navigator.of(dialogContext).pop({'title': title, 'body': body});
               },
               child: const Text('Simpan'),
             ),
@@ -93,8 +106,9 @@ class NotesPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(notesProvider);
+    final state = ref.watch(filteredNotesProvider);
     final forceOffline = ref.watch(forceOfflineProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -109,13 +123,9 @@ class NotesPage extends ConsumerWidget {
             onPressed: forceOffline
                 ? null
                 : () async {
-                    final repository = ref.read(
-                      noteRepositoryProvider,
-                    );
+                    final repository = ref.read(noteRepositoryProvider);
 
-                    final syncedCount = await syncNotes(
-                      repository,
-                    );
+                    final syncedCount = await syncNotes(repository);
 
                     ref.invalidate(notesProvider);
 
@@ -125,9 +135,9 @@ class NotesPage extends ConsumerWidget {
                           content: Text(
                             syncedCount == 0
                                 ? 'Tidak ada catatan yang perlu '
-                                    'disinkronkan.'
+                                      'disinkronkan.'
                                 : '$syncedCount catatan berhasil '
-                                    'disinkronkan.',
+                                      'disinkronkan.',
                           ),
                         ),
                       );
@@ -140,9 +150,7 @@ class NotesPage extends ConsumerWidget {
             icon: const Icon(Icons.article_outlined),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const PostsPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const PostsPage()),
               );
             },
           ),
@@ -154,28 +162,49 @@ class NotesPage extends ConsumerWidget {
           SwitchListTile(
             title: const Text('Force Offline'),
             subtitle: Text(
-              forceOffline
-                  ? 'Simulasi offline aktif'
-                  : 'Simulasi online aktif',
+              forceOffline ? 'Simulasi offline aktif' : 'Simulasi online aktif',
             ),
             value: forceOffline,
             onChanged: (value) {
-              ref
-                  .read(forceOfflineProvider.notifier)
-                  .setOffline(value);
+              ref.read(forceOfflineProvider.notifier).setOffline(value);
             },
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              key: const Key('search_notes_field'),
+              decoration: InputDecoration(
+                hintText: 'Cari catatan berdasarkan judul...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          ref.read(searchQueryProvider.notifier).clear();
+                        },
+                      )
+                    : null,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) {
+                ref.read(searchQueryProvider.notifier).setQuery(value);
+              },
+            ),
           ),
 
           Expanded(
             child: state.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
 
               data: (notes) {
-                final dirtyCount = notes
-                    .where((note) => note.dirty)
-                    .length;
+                final dirtyCount = notes.where((note) => note.dirty).length;
 
                 return Column(
                   children: [
@@ -185,13 +214,9 @@ class NotesPage extends ConsumerWidget {
                         children: [
                           const Text(
                             'Dirty Notes: ',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          Badge(
-                            label: Text('$dirtyCount'),
-                          ),
+                          Badge(label: Text('$dirtyCount')),
                         ],
                       ),
                     ),
@@ -200,9 +225,28 @@ class NotesPage extends ConsumerWidget {
 
                     Expanded(
                       child: notes.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Belum ada catatan.',
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    searchQuery.trim().isNotEmpty
+                                        ? Icons.search_off
+                                        : Icons.note_outlined,
+                                    size: 64,
+                                    color: Colors.grey,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    searchQuery.trim().isNotEmpty
+                                        ? 'Tidak ada catatan dengan kata kunci tersebut.'
+                                        : 'Belum ada catatan.',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
                             )
                           : ListView.builder(

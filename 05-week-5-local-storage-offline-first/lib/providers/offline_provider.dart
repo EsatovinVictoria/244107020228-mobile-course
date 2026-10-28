@@ -11,7 +11,6 @@ class ForceOfflineNotifier extends Notifier<bool> {
   }
 }
 
-final forceOfflineProvider =
-    NotifierProvider<ForceOfflineNotifier, bool>(
+final forceOfflineProvider = NotifierProvider<ForceOfflineNotifier, bool>(
   ForceOfflineNotifier.new,
 );
