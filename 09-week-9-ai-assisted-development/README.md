@@ -72,62 +72,66 @@ Kelebihan: Memberikan batasan teknis yang spesifik, mematuhi separation of conce
 
 ---
 
-## Implementasi dan Deteksi Halusinasi AI
+## Praktikum 2: Generate dan Verifikasi Search
 
-### 1. Halusinasi yang Ditemukan dan Solusinya
+Praktikum 2 melakukan verifikasi ketat terhadap kode pencarian yang dihasilkan AI melalui protokol 6 langkah dan pembuktian empiris terhadap halusinasi AI.
 
-Pada draf usulan awal, AI mengusulkan penggunaan StateProvider untuk mengelola kata kunci pencarian. Saat dijalankan pada compiler Dart, proses build gagal karena StateProvider sudah dihapus pada flutter_riverpod versi 3.x yang digunakan oleh project.
+### 1. Generate Satu Fitur Kecil
 
-Kode usulan AI tersebut direfaktor menggunakan SearchQueryNotifier yang mewarisi Notifier dari Riverpod 3.x, kemudian didaftarkan melalui NotifierProvider.
+Fitur dibatasi hanya pada pencarian judul catatan dan tampilan empty state agar cakupan review tetap terukur dan mudah diverifikasi. Seluruh prompt mentah dan kode awal AI didokumentasikan pada docs/ai-log.md.
 
-### 2. Kode Hasil Refactoring
+### 2. Pelaksanaan Verifikasi 6 Langkah
 
-Berikut potongan fungsi pencarian pada NoteRepository (lib/data/repositories/note_repository.dart):
+1. Membaca tiap baris kode: Meneliti struktur data dan logika filter. Ditemukan bahwa AI mengusulkan pemanggilan synchronous pada method repository asinkron serta menggunakan state management lama.
+2. Cek import domain: Memastikan berkas domain lib/data/local/note.dart steril tanpa mengimpor Flutter, Dio, maupun SQLite. Hasil pengecekan import bernilai nol sehingga aturan Clean Architecture terpenuhi.
+3. Cek API nyata: Melakukan pengecekan pada pubspec.lock dan autocomplete SDK. Ditemukan bahwa StateProvider telah dihapus pada flutter_riverpod versi 3.4.3.
+4. Jalankan flutter analyze: Menjalankan static analysis hingga memperoleh status No issues found tanpa ada error maupun warning.
+5. Tulis unit test sukses dan gagal: Membuat pengujian fungsi filterNotes untuk memverifikasi pencarian yang mengabaikan huruf besar/kecil (sukses) dan kata kunci yang tidak cocok (menghasilkan kosong).
+6. Uji manual tiga kondisi: Menjalankan aplikasi untuk menguji kondisi query kosong (seluruh catatan tampil), query cocok (catatan tersaring), dan query tidak cocok (tampilan empty state aktif).
+
+### 3. Bukti Pengujian Unit Test
+
+Berikut implementasi fungsi filterNotes pada lapisan data domain murni (lib/data/local/note.dart):
 
 ```dart
-Future<List<Note>> searchNotes(String query) async {
-  final trimmed = query.trim();
+List<Note> filterNotes(List<Note> notes, String query) {
+  final trimmed = query.trim().toLowerCase();
   if (trimmed.isEmpty) {
-    return fetchNotes();
+    return notes;
   }
-
-  final db = await _openDb();
-  final rows = await db.query(
-    'notes',
-    where: 'LOWER(title) LIKE ?',
-    whereArgs: ['%${trimmed.toLowerCase()}%'],
-    orderBy: 'updated_at DESC',
-  );
-  return rows.map(Note.fromMap).toList();
+  return notes
+      .where((note) => note.title.toLowerCase().contains(trimmed))
+      .toList();
 }
 ```
 
-Berikut provider pencarian dan filtered list pada NotesPage (lib/pages/notes_page.dart):
+Berikut unit test verifikasi yang membuktikan kebenaran logika filter (test/note_search_test.dart):
 
 ```dart
-class SearchQueryNotifier extends Notifier<String> {
-  @override
-  String build() => '';
+test('filter abaikan huruf besar/kecil', () {
+  expect(filterNotes(list, 'belanja'), hasLength(2));
+});
 
-  void setQuery(String value) => state = value;
-  void clear() => state = '';
-}
-
-final searchQueryProvider =
-    NotifierProvider<SearchQueryNotifier, String>(SearchQueryNotifier.new);
-
-final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
-  final notesState = ref.watch(notesProvider);
-  final query = ref.watch(searchQueryProvider).trim().toLowerCase();
-
-  return notesState.whenData((notes) {
-    if (query.isEmpty) return notes;
-    return notes
-        .where((n) => n.title.toLowerCase().contains(query))
-        .toList();
-  });
+test('query tak cocok kembalikan kosong', () {
+  expect(filterNotes(list, 'zzz-tak-ada'), isEmpty);
 });
 ```
+
+### 4. Bukti Wajib: Halusinasi dan Bug AI
+
+Verifikasi berhasil menemukan satu halusinasi fatal dan satu kelemahan logika dari usulan awal AI:
+
+1. Halusinasi Package Kadaluarsa (StateProvider):
+   AI mengusulkan deklarasi final searchQueryProvider = StateProvider(ref) => ''.
+   Cara membuktikan:
+   Saat kode dijalankan, compiler Dart langsung menghasilkan error kompilasi:
+   Error: Method not found: StateProvider.
+   Pemeriksaan pada pubspec.yaml menunjukkan flutter_riverpod berada pada versi 3.4.3. Pada versi ini StateProvider sudah tidak tersedia dan digantikan oleh NotifierProvider.
+
+2. Celah Logika Case-Sensitivity:
+   AI awalnya mengusulkan note.title.contains(query) tanpa fungsi toLowerCase().
+   Cara membuktikan:
+   Pencarian kata kunci belanja gagal mencocokkan catatan berjudul BELANJA Bulanan sehingga menghasilkan data yang tidak lengkap. Logika ini diperbaiki dengan menyamakan seluruh teks ke huruf kecil sebelum pembandingan.
 
 ---
 
@@ -138,7 +142,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
 Pemeriksaan dijalankan pada direktori project 05-week-5-local-storage-offline-first:
 - dart format: 20 file diperiksa, 0 changed.
 - flutter analyze: No issues found! (0 issues).
-- flutter test: Seluruh 11 test lulus (All tests passed!), mencakup 4 test bawaan dan 7 test pencarian serta widget test interaktif.
+- flutter test: Seluruh 14 test lulus (All tests passed!), mencakup 4 test bawaan dan 10 test pencarian, provider, serta widget test interaktif.
 
 ### 2. Tampilan Hasil Uji Manual
 

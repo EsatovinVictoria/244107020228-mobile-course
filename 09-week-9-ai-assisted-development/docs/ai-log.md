@@ -1,6 +1,6 @@
 # AI Log: Prompt, Generate, Verify, Test, Refactor, Explain
 
-Dokumen ini mencatat seluruh eksperimen interaksi AI dalam pengembangan fitur pencarian (*search*) catatan dan tampilan kosong (*empty state*) pada project **`05-week-5-local-storage-offline-first`**.
+Dokumen ini mencatat seluruh eksperimen interaksi AI dalam pengembangan dan verifikasi fitur pencarian (*search*) catatan dan tampilan kosong (*empty state*) pada project **`05-week-5-local-storage-offline-first`**.
 
 ---
 
@@ -9,13 +9,14 @@ Dokumen ini mencatat seluruh eksperimen interaksi AI dalam pengembangan fitur pe
 - **Proyek Target:** `05-week-5-local-storage-offline-first` (Aplikasi Offline Notes berbasis SQLite dan Riverpod).
 - **Fitur Baru:** Pencarian catatan berdasarkan judul (*Search Title Notes*) dan penanganan status tanpa hasil (*Empty State*).
 - **File Terdampak:**
+  - `lib/data/local/note.dart` (pure domain model & fungsi `filterNotes`)
   - `lib/data/repositories/note_repository.dart`
   - `lib/pages/notes_page.dart`
   - `test/note_search_test.dart`
 
 ---
 
-## 2. Formula 5 Slot Prompting
+## 2. Formula 5 Slot Prompting (Praktikum 1)
 
 Untuk menghasilkan kode yang tepat sasaran, prompt disusun menggunakan formula 5 slot:
 
@@ -88,59 +89,69 @@ final filteredNotesProvider = Provider<List<Note>>((ref) {
 
 ---
 
-## 5. Keputusan Refactoring & Solusi Akhir
+## 5. Pelaksanaan Verifikasi 6 Langkah (Praktikum 2)
 
-Berdasarkan prinsip *Verify -> Test -> Refactor*, usulan AI diperbaiki secara sadar:
+Sesuai instruksi Praktikum 2, dilakukan verifikasi menyeluruh terhadap kode fitur:
+
+1. **Baca Tiap Baris:** Memeriksa logika filter dan mapping data.
+2. **Cek Import Domain:** Memastikan `lib/data/local/note.dart` steril tanpa import Flutter, Dio, maupun SQLite:
+   ```text
+   Imports in note.dart: 0 []
+   ```
+   Aturan arsitektur terpenuhi 100%.
+3. **Cek API Nyata:** Memverifikasi ketersediaan method pada Riverpod 3.4.3 dan `sqflite`.
+4. **Jalankan static analysis:** Menjalankan `flutter analyze` hingga 0 warning:
+   ```text
+   Analyzing 05-week-5-local-storage-offline-first...              
+   No issues found! (ran in 10.9s)
+   ```
+5. **Tulis Unit Test Sukses & Gagal:**
+   ```dart
+   test('filter abaikan huruf besar/kecil', () {
+     expect(filterNotes(list, 'belanja'), hasLength(2));
+   });
+
+   test('query tak cocok kembalikan kosong', () {
+     expect(filterNotes(list, 'zzz-tak-ada'), isEmpty);
+   });
+   ```
+6. **Uji Manual 3 Skenario:** Query kosong (seluruh catatan muncul), query cocok (catatan tersaring), dan query tidak cocok (tampilan *empty state* aktif).
+
+---
+
+## 6. Keputusan Refactoring & Solusi Akhir
 
 1. **Refactoring Riverpod 3:**
-   Mengganti `StateProvider` dengan `NotifierProvider` menggunakan `SearchQueryNotifier`:
+   Mengganti `StateProvider` dengan `NotifierProvider` menggunakan `SearchQueryNotifier`.
+2. **Domain Pure Filter Function:**
+   Mengekstraksi fungsi `filterNotes` murni ke `lib/data/local/note.dart` tanpa ketergantungan library luar:
    ```dart
-   class SearchQueryNotifier extends Notifier<String> {
-     @override
-     String build() => '';
-
-     void setQuery(String value) => state = value;
-     void clear() => state = '';
+   List<Note> filterNotes(List<Note> notes, String query) {
+     final trimmed = query.trim().toLowerCase();
+     if (trimmed.isEmpty) return notes;
+     return notes
+         .where((note) => note.title.toLowerCase().contains(trimmed))
+         .toList();
    }
-
-   final searchQueryProvider =
-       NotifierProvider<SearchQueryNotifier, String>(SearchQueryNotifier.new);
    ```
-2. **Reactivity & Separasi Layer:**
-   Membuat `filteredNotesProvider` yang mengamati `notesProvider` (asinkron) dan menyaring data secara reaktif berdasarkan `searchQueryProvider`.
 3. **Keamanan SQLite:**
-   Pada `NoteRepository`, pencarian diimplementasikan dengan *parameterized query* dan `LOWER()`:
-   ```dart
-   Future<List<Note>> searchNotes(String query) async {
-     final trimmed = query.trim();
-     if (trimmed.isEmpty) return fetchNotes();
-
-     final db = await _openDb();
-     final rows = await db.query(
-       'notes',
-       where: 'LOWER(title) LIKE ?',
-       whereArgs: ['%${trimmed.toLowerCase()}%'],
-       orderBy: 'updated_at DESC',
-     );
-     return rows.map(Note.fromMap).toList();
-   }
-   ```
+   Pada `NoteRepository`, pencarian diimplementasikan dengan *parameterized query* dan `LOWER()`.
 4. **Empty State Responsif:**
    Jika `notes.isEmpty` dan `searchQuery` terisi, antarmuka menampilkan ikon `Icons.search_off` dengan pesan informatif: *"Tidak ada catatan dengan kata kunci tersebut."*.
 
 ---
 
-## 6. Bukti Verifikasi Mesin
+## 7. Bukti Verifikasi Mesin
 
 ### 1. Static Analysis (`flutter analyze`)
 ```text
 Analyzing 05-week-5-local-storage-offline-first...              
-No issues found! (ran in 56.4s)
+No issues found! (ran in 10.9s)
 ```
 
 ### 2. Format Code (`dart format`)
 ```text
-Formatted 20 files (0 changed) in 0.06 seconds.
+Formatted 20 files (0 changed) in 0.09 seconds.
 ```
 
 ### 3. Automated Tests (`flutter test`)
@@ -150,10 +161,8 @@ Formatted 20 files (0 changed) in 0.06 seconds.
 00:00 +2: Search Notes Repository & Provider Logic searchNotes bersifat case-insensitive
 00:00 +3: Search Notes Repository & Provider Logic searchNotes menghasilkan list kosong jika kata kunci tidak ditemukan
 00:00 +4: Search Notes Repository & Provider Logic filteredNotesProvider bereaksi terhadap perubahan searchQueryProvider
-00:00 +5: fromMap aman terhadap field yang hilang
-00:00 +6: NotesPage Search Widget Test menampilkan search field dan menyaring tampilan catatan secara interaktif
+00:00 +5: NotesPage Search Widget Test menampilkan search field dan menyaring tampilan catatan secara interaktif
 ...
-00:02 +11: All tests passed!
+00:03 +14: All tests passed!
 ```
-Total **11 pengujian otomatis lulus 100%**, mencakup repository unit test, provider logic test, dan full widget test interaksi pencarian.
-
+Total **14 pengujian otomatis lulus 100%**, mencakup domain pure function, repository unit test, provider logic test, dan full widget test interaksi pencarian.
