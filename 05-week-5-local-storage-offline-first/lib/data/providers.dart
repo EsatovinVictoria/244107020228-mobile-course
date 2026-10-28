@@ -6,31 +6,23 @@ import 'models/post.dart';
 import 'repositories/post_repository.dart';
 import 'sync.dart';
 
-final dioProvider = Provider<Dio>(
-  (ref) => createDio(),
-);
+final dioProvider = Provider<Dio>((ref) => createDio());
 
 final postRepositoryProvider = Provider<PostRepository>(
-  (ref) => PostRepository(
-    ref.watch(dioProvider),
-  ),
+  (ref) => PostRepository(ref.watch(dioProvider)),
 );
 
-final cachedPostsProvider = FutureProvider<List<Post>>(
-  (ref) {
-    return readCachedPosts();
-  },
-);
+final cachedPostsProvider = FutureProvider<List<Post>>((ref) {
+  return readCachedPosts();
+});
 
-final postsCacheFirstProvider = FutureProvider<List<Post>>(
-  (ref) {
-    final repository = ref.watch(postRepositoryProvider);
+final postsCacheFirstProvider = FutureProvider<List<Post>>((ref) {
+  final repository = ref.watch(postRepositoryProvider);
 
-    return loadPostsCacheFirst(
-      repository,
-      onCacheUpdated: () {
-        ref.invalidate(cachedPostsProvider);
-      },
-    );
-  },
-);
+  return loadPostsCacheFirst(
+    repository,
+    onCacheUpdated: () {
+      ref.invalidate(cachedPostsProvider);
+    },
+  );
+});

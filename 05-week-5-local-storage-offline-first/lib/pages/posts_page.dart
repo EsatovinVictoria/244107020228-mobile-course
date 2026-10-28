@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,7 +7,6 @@ class PostsPage extends ConsumerWidget {
   const PostsPage({super.key});
 
   @override
-
   Widget build(BuildContext context, WidgetRef ref) {
     final cacheFirst = ref.watch(postsCacheFirstProvider);
 
@@ -28,9 +26,7 @@ class PostsPage extends ConsumerWidget {
         ],
       ),
       body: cachedPosts.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -77,17 +73,13 @@ class PostsPage extends ConsumerWidget {
                     const Icon(Icons.storage),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        '${posts.length} posts dari cache SQLite',
-                      ),
+                      child: Text('${posts.length} posts dari cache SQLite'),
                     ),
                     if (cacheFirst.isLoading)
                       const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                   ],
                 ),
@@ -100,9 +92,7 @@ class PostsPage extends ConsumerWidget {
                     final post = posts[index];
 
                     return ListTile(
-                      leading: CircleAvatar(
-                        child: Text('${post.id}'),
-                      ),
+                      leading: CircleAvatar(child: Text('${post.id}')),
                       title: Text(post.title),
                       subtitle: Text(
                         post.body,

@@ -11,12 +11,7 @@ Dio createDio() {
     ),
   );
 
-  dio.interceptors.add(
-    LogInterceptor(
-      requestBody: true,
-      responseBody: false,
-    ),
-  );
+  dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: false));
 
   return dio;
 }
