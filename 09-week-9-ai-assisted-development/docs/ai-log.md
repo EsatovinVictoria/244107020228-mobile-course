@@ -1,17 +1,18 @@
 # AI Log: Prompt, Generate, Verify, Test, Refactor, Explain
 
-Dokumen ini mencatat seluruh eksperimen interaksi AI dalam pengembangan dan verifikasi fitur pencarian (*search*) catatan dan tampilan kosong (*empty state*) pada project **`05-week-5-local-storage-offline-first`**.
+Dokumen ini mencatat seluruh eksperimen interaksi AI dalam pengembangan, verifikasi, debugging, dan refactoring fitur pencarian (*search*) catatan dan tampilan kosong (*empty state*) pada project **`05-week-5-local-storage-offline-first`**.
 
 ---
 
 ## 1. Objek Fitur dan Konteks Proyek
 
 - **Proyek Target:** `05-week-5-local-storage-offline-first` (Aplikasi Offline Notes berbasis SQLite dan Riverpod).
-- **Fitur Baru:** Pencarian catatan berdasarkan judul (*Search Title Notes*) dan penanganan status tanpa hasil (*Empty State*).
+- **Fitur Baru:** Pencarian catatan berdasarkan judul dan isi (*Search Notes*) dan penanganan status tanpa hasil (*Empty State*).
 - **File Terdampak:**
-  - `lib/data/local/note.dart` (pure domain model & fungsi `filterNotes`)
+  - `lib/domain/usecases/search_notes.dart` (pure Clean Architecture use case)
+  - `lib/data/local/note.dart` (domain entity)
   - `lib/data/repositories/note_repository.dart`
-  - `lib/pages/notes_page.dart`
+  - `lib/pages/notes_page.dart` (refactored into modular widgets < 40 lines)
   - `test/note_search_test.dart`
 
 ---
@@ -91,14 +92,8 @@ final filteredNotesProvider = Provider<List<Note>>((ref) {
 
 ## 5. Pelaksanaan Verifikasi 6 Langkah (Praktikum 2)
 
-Sesuai instruksi Praktikum 2, dilakukan verifikasi menyeluruh terhadap kode fitur:
-
 1. **Baca Tiap Baris:** Memeriksa logika filter dan mapping data.
-2. **Cek Import Domain:** Memastikan `lib/data/local/note.dart` steril tanpa import Flutter, Dio, maupun SQLite:
-   ```text
-   Imports in note.dart: 0 []
-   ```
-   Aturan arsitektur terpenuhi 100%.
+2. **Cek Import Domain:** Memastikan `lib/data/local/note.dart` steril tanpa import Flutter, Dio, maupun SQLite (`Imports in note.dart: 0 []`).
 3. **Cek API Nyata:** Memverifikasi ketersediaan method pada Riverpod 3.4.3 dan `sqflite`.
 4. **Jalankan static analysis:** Menjalankan `flutter analyze` hingga 0 warning:
    ```text
@@ -119,39 +114,73 @@ Sesuai instruksi Praktikum 2, dilakukan verifikasi menyeluruh terhadap kode fitu
 
 ---
 
-## 6. Keputusan Refactoring & Solusi Akhir
+## 6. Debugging dan Refactoring (Praktikum 3)
 
-1. **Refactoring Riverpod 3:**
-   Mengganti `StateProvider` dengan `NotifierProvider` menggunakan `SearchQueryNotifier`.
-2. **Domain Pure Filter Function:**
-   Mengekstraksi fungsi `filterNotes` murni ke `lib/data/local/note.dart` tanpa ketergantungan library luar:
-   ```dart
-   List<Note> filterNotes(List<Note> notes, String query) {
-     final trimmed = query.trim().toLowerCase();
-     if (trimmed.isEmpty) return notes;
-     return notes
-         .where((note) => note.title.toLowerCase().contains(trimmed))
-         .toList();
-   }
-   ```
-3. **Keamanan SQLite:**
-   Pada `NoteRepository`, pencarian diimplementasikan dengan *parameterized query* dan `LOWER()`.
-4. **Empty State Responsif:**
-   Jika `notes.isEmpty` dan `searchQuery` terisi, antarmuka menampilkan ikon `Icons.search_off` dengan pesan informatif: *"Tidak ada catatan dengan kata kunci tersebut."*.
+### 1. Debug dengan Test Merah (Red-Green-Refactor)
+
+1. **Reproduksi Masalah:**
+   * Pengguna mencari kata kunci yang berada pada isi catatan (*body*), misalnya kata `"anggaran"`.
+   * Pengguna memasukkan spasi di awal atau akhir kata kunci, misalnya `"   flutter   "`.
+   * Hasil aktual pada usulan awal AI: Catatan tidak ditemukan (0 hasil) karena pencarian hanya mengecek kolom `title` dan tidak melakukan `.trim()`.
+2. **Isolasi Logika ke Use Case:**
+   * Aturan filter diekstraksi ke class use case murni `SearchNotes` pada `lib/domain/usecases/search_notes.dart`.
+3. **Test Merah (Red Test):**
+   * Dibuat test pembukti bug pada `test/note_search_test.dart`:
+     ```dart
+     test('mencari kata kunci pada isi body catatan', () {
+       final results = useCase(notes: sample, query: 'anggaran');
+       expect(results, hasLength(1));
+     });
+     test('menangani spasi berlebih pada awal dan akhir query', () {
+       final results = useCase(notes: sample, query: '   flutter   ');
+       expect(results, hasLength(1));
+     });
+     ```
+   * Sebelum perbaikan, test ini gagal (*Red*).
+4. **Perbaikan Kecil (Green Test):**
+   * Menambahkan pengecekan pada `title` dan `body` serta normalisasi `.trim().toLowerCase()` pada `SearchNotes`:
+     ```dart
+     final titleMatch = note.title.toLowerCase().contains(trimmed);
+     final bodyMatch = note.body.toLowerCase().contains(trimmed);
+     return titleMatch || bodyMatch;
+     ```
+   * Seluruh pengujian berubah menjadi lulus (*Green*).
+5. **Akar Masalah:**
+   * AI membuat asumsi sempit bahwa pencarian catatan hanya berlaku untuk judul saja, mengabaikan atribut `body` dan sanitasi whitespace.
+
+### 2. Refactoring ke Layer yang Tepat
+
+Arsitektur ditata ulang dengan pemisahan tanggung jawab yang tegas:
+```text
+Widget (_NotesSearchBar, _NotesContent, _NotesEmptyState - UI murni)
+  -> Notifier (SearchQueryNotifier - state query saja)
+  -> Use Case (SearchNotes - aturan bisnis pencarian murni)
+  -> Repository (NoteRepository - akses SQLite)
+```
+
+**Pemeriksaan Batas Ukuran Fungsi (< 40 Baris):**
+* `_showAddNoteDialog`: 35 baris.
+* `_addNote`: 11 baris.
+* `_sync`: 17 baris.
+* `NotesPage.build`: 38 baris.
+* `_NotesSearchBar`: 34 baris.
+* `_NotesContent`: 35 baris.
+* `_NotesEmptyState`: 25 baris.
+* **Tidak ada pemanggilan database langsung dari widget.**
 
 ---
 
-## 7. Bukti Verifikasi Mesin
+## 7. Bukti Verifikasi Mesin Akhir
 
 ### 1. Static Analysis (`flutter analyze`)
 ```text
 Analyzing 05-week-5-local-storage-offline-first...              
-No issues found! (ran in 10.9s)
+No issues found! (ran in 8.5s)
 ```
 
-### 2. Format Code (`dart format`)
+### 2. Formatter (`dart format`)
 ```text
-Formatted 20 files (0 changed) in 0.09 seconds.
+Formatted 21 files (0 changed) in 0.08 seconds.
 ```
 
 ### 3. Automated Tests (`flutter test`)
@@ -163,6 +192,12 @@ Formatted 20 files (0 changed) in 0.09 seconds.
 00:00 +4: Search Notes Repository & Provider Logic filteredNotesProvider bereaksi terhadap perubahan searchQueryProvider
 00:00 +5: NotesPage Search Widget Test menampilkan search field dan menyaring tampilan catatan secara interaktif
 ...
-00:03 +14: All tests passed!
+00:02 +11: filterNotes Pure Domain Function Test filter abaikan huruf besar/kecil
+00:02 +12: filterNotes Pure Domain Function Test query tak cocok kembalikan kosong
+00:02 +13: filterNotes Pure Domain Function Test query kosong kembalikan seluruh catatan
+00:02 +14: SearchNotes UseCase Domain Test mencari kata kunci pada isi body catatan
+00:02 +15: SearchNotes UseCase Domain Test menangani spasi berlebih pada awal dan akhir query
+00:02 +16: SearchNotes UseCase Domain Test query kosong mengembalikan list lengkap
+00:02 +17: All tests passed!
 ```
-Total **14 pengujian otomatis lulus 100%**, mencakup domain pure function, repository unit test, provider logic test, dan full widget test interaksi pencarian.
+Total **17 pengujian otomatis lulus 100%**.
