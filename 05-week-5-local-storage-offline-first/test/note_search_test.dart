@@ -180,4 +180,28 @@ void main() {
       },
     );
   });
+
+  group('filterNotes Pure Domain Function Test', () {
+    final list = [
+      Note(
+        id: 1,
+        title: 'Daftar Belanja Pasar',
+        updatedAt: DateTime(2026, 10, 1),
+      ),
+      Note(id: 2, title: 'BELANJA Bulanan', updatedAt: DateTime(2026, 10, 2)),
+      Note(id: 3, title: 'Catatan Kuliah', updatedAt: DateTime(2026, 10, 3)),
+    ];
+
+    test('filter abaikan huruf besar/kecil', () {
+      expect(filterNotes(list, 'belanja'), hasLength(2));
+    });
+
+    test('query tak cocok kembalikan kosong', () {
+      expect(filterNotes(list, 'zzz-tak-ada'), isEmpty);
+    });
+
+    test('query kosong kembalikan seluruh catatan', () {
+      expect(filterNotes(list, ''), hasLength(3));
+    });
+  });
 }
