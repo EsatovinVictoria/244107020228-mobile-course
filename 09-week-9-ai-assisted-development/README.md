@@ -310,3 +310,43 @@ Berikut merupakan tampilan Empty State ketika kata kunci pencarian tidak ditemuk
 ## Dokumentasi Log AI
 
 Catatan lengkap prompt, evaluasi usulan, dan log verifikasi dicatat pada docs/ai-log.md.
+
+
+---
+
+## Mini Project
+
+1. Tambahkan satu fitur kecil dengan AI (search/filter/sort) + empty state.
+
+2. Sertakan prompt inti, konteks ditempel, dan output awal AI di docs/ai-log.md.
+
+3. Bukti mesin hijau: flutter analyze + flutter test di README.
+
+4. Tabel terima/tolak saran AI + alasan teknis + bukti grep/test.
+
+5. Push ke 09-week-9-ai-assisted-development/ berisi docs/, README.md, screenshots/. README menjelaskan fitur, prompt, stack, cara jalan, dan hasil.
+
+## Refleksi
+
+1. Satu halusinasi AI apa yang Anda temukan dan bagaimana membuktikannya?
+
+Jawaban: Halusinasi AI yang ditemukan adalah penggunaan StateProvider pada flutter_riverpod. Pada saat awal mengusulkan kode, AI mendeklarasikan provider pencarian menggunakan sintaks StateProvider((ref) => ''). Cara membuktikannya adalah melalui pemeriksaan berkas dependensi pubspec.yaml dan pubspec.lock yang mencatat flutter_riverpod versi 3.4.3. Ketika kode dijalankan, compiler Dart langsung menghasilkan error kompilasi yang menyatakan method StateProvider tidak ditemukan karena telah dihapus pada Riverpod versi 3. Selain itu, pembuktian dilakukan dengan memeriksa saran autocomplete pada IDE yang mengonfirmasi bahwa StateProvider sudah tidak tersedia dan harus diganti menggunakan NotifierProvider atau Notifier.
+
+2. Prompt mana yang paling membantu dan apa yang Anda ubah?
+
+Jawaban: Prompt yang paling membantu adalah prompt Formula 5 Slot yang menyertakan batasan arsitektur secara eksplisit (Peran, Konteks, Tugas, Batas, Output). Perubahan penting yang dilakukan adalah mengubah instruksi dari yang semula bersifat umum menjadi spesifik: menegaskan bahwa arsitektur yang digunakan adalah presentation ke domain ke data, melarang pemanggilan langsung SQLite dari widget UI, menginstruksikan penggunaan NotifierProvider Riverpod 3 (bukan StateProvider), serta meminta ketersediaan empty state dan unit/widget test. Penegasan batasan ini secara efektif mencegah AI menghasilkan kode vibe coding yang mencampuradukkan layer.
+
+3. Satu refactor apa yang Anda lakukan pada kode AI?
+
+Jawaban: Refactor yang dilakukan adalah memisahkan aturan penyaringan pencarian dari presentation layer ke class use case domain murni SearchNotes pada lib/domain/usecases/search_notes.dart. Kode usulan awal AI menaruh filter di dalam widget atau memanggil pencarian synchronous pada repository. Melalui refactoring ini, fungsi filter diubah menjadi callable class murni tanpa dependensi ke SQLite, Dio, maupun framework Flutter. Selain itu, widget NotesPage yang semula panjang dipecah menjadi komponen modular berukuran di bawah 40 baris (_NotesSearchBar, _NotesContent, _NotesEmptyState) sehingga mudah dipahami dan diuji.
+
+4. Keputusan terima/tolak mana yang paling sulit?
+
+Jawaban: Keputusan yang paling sulit adalah menolak usulan AI untuk menambahkan virtual table SQLite FTS5 (Full-Text Search) dan endpoint remote search via Dio pada AI Challenge. Secara konseptual dan performa teoritis, FTS5 tampak sangat menarik karena menawarkan fitur pencarian teks tingkat lanjut dan fuzzy search. Namun secara arsitektural dan pragmatis, keputusan penolakan diambil karena aplikasi ini merupakan personal notes lokal berukuran ringan. Menambahkan tabel virtual FTS5 akan merusak skema migrasi database SQLite yang ada dan menimbulkan kompleksitas yang tidak sebanding (over-engineering). Mempertahankan filter in-memory murni pada use case domain dan sinkronisasi LIKE query pada NoteRepository terbukti jauh lebih bersih, stabil, dan mudah diverifikasi dengan automated test.
+
+## Referensi
+
+1. Dokumentasi resmi Flutter dan Dart: https://docs.flutter.dev dan https://dart.dev
+2. Dokumentasi resmi Riverpod 3: https://riverpod.dev
+3. Dokumentasi resmi SQLite sqflite: https://pub.dev/packages/sqflite
+4. Modul Codelab Pemrograman Mobile JTI Polinema: https://jti-polinema.github.io/flutter-codelab/09-minggu-9-ai-assisted-development-vibe-coding/
