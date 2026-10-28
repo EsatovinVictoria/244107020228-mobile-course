@@ -11,9 +11,6 @@ class PostRepository {
     final response = await _dio.get<List>('/posts');
     final data = response.data ?? [];
 
-    return data
-        .whereType<Map<String, dynamic>>()
-        .map(Post.fromJson)
-        .toList();
+    return data.whereType<Map<String, dynamic>>().map(Post.fromJson).toList();
   }
 }

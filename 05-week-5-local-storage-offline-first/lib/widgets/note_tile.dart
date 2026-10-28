@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/local/note.dart';
 
 class NoteTile extends StatelessWidget {
-  const NoteTile({
-    super.key,
-    required this.note,
-    this.onTap,
-  });
+  const NoteTile({super.key, required this.note, this.onTap});
 
   final Note note;
   final VoidCallback? onTap;
@@ -20,13 +16,10 @@ class NoteTile extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (note.body.isNotEmpty)
-            Text(note.body),
+          if (note.body.isNotEmpty) Text(note.body),
           if (note.dirty) ...[
             const SizedBox(height: 4),
-            const Badge(
-              label: Text('Belum tersinkron'),
-            ),
+            const Badge(label: Text('Belum tersinkron')),
           ],
         ],
       ),

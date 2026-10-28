@@ -21,11 +21,11 @@ class Post {
   }
 
   Map<String, dynamic> toJson() => {
-        'userId': userId,
-        'id': id,
-        'title': title,
-        'body': body,
-      };
+    'userId': userId,
+    'id': id,
+    'title': title,
+    'body': body,
+  };
 
   factory Post.fromMap(Map<String, Object?> map) {
     return Post(
@@ -37,9 +37,9 @@ class Post {
   }
 
   Map<String, Object?> toMap() => {
-        'user_id': userId,
-        'id': id,
-        'title': title,
-        'body': body,
-      };
+    'user_id': userId,
+    'id': id,
+    'title': title,
+    'body': body,
+  };
 }

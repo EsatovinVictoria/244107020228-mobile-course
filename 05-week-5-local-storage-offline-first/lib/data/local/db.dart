@@ -26,9 +26,7 @@ Future<Database> openNotesDb() async {
       if (oldVersion < 4) {
         // cached_posts hanya berisi cache API,
         // sehingga aman dibuat ulang ketika schema berubah.
-        await db.execute(
-          'DROP TABLE IF EXISTS cached_posts',
-        );
+        await db.execute('DROP TABLE IF EXISTS cached_posts');
 
         await _createCachedPostsTable(db);
       }
