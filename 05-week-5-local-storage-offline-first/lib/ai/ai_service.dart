@@ -8,12 +8,23 @@ class AiService {
   final http.Client _client;
   final String _apiUrl;
 
-  AiService({FlutterSecureStorage? storage, http.Client? client, String? apiUrl})
-    : _storage = storage ?? const FlutterSecureStorage(),
-      _client = client ?? http.Client(),
-      _apiUrl =
-          apiUrl ??
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+  static const String defaultApiUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent';
+
+  AiService({
+    FlutterSecureStorage? storage,
+    http.Client? client,
+    String? apiUrl,
+  })  : _storage = storage ?? const FlutterSecureStorage(),
+        _client = client ?? http.Client(),
+        _apiUrl = _resolveApiUrl(apiUrl);
+
+  static String _resolveApiUrl(String? url) {
+    if (url == null || url.isEmpty || url.contains('gemini-pro:')) {
+      return defaultApiUrl;
+    }
+    return url;
+  }
 
   Future<String> ask(String question) async {
     final apiKey = await _storage.read(key: 'ai_api_key');
@@ -70,10 +81,16 @@ class AiService {
 
     final streamedResponse = await _client.send(request);
     if (streamedResponse.statusCode != 200) {
-      final body = await streamedResponse.stream.bytesToString();
-      throw Exception(
-        'Gagal memanggil AI API: ${streamedResponse.statusCode} - $body',
-      );
+      try {
+        final fallbackText = await ask(question);
+        yield fallbackText;
+        return;
+      } catch (_) {
+        final body = await streamedResponse.stream.bytesToString();
+        throw Exception(
+          'Gagal memanggil AI API: ${streamedResponse.statusCode} - $body',
+        );
+      }
     }
 
     String buffer = '';

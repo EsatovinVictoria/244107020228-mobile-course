@@ -49,3 +49,4 @@ Fitur asisten percakapan cerdas pada aplikasi catatan offline diintegrasikan den
 | Widget Test | ChatScreen Layout | Menampilkan AppBar, Banner Privasi, dan Empty State | Lulus |
 | Widget Test | ChatScreen Interaksi | Mengirim teks dan menampilkan gelembung streaming | Lulus |
 | Widget Test | ChatScreen Deteksi NIK | Memunculkan dialog peringatan privasi saat ada NIK | Lulus |
+

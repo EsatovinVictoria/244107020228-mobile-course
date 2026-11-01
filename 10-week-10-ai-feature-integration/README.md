@@ -84,14 +84,23 @@ class AiService {
   final http.Client _client;
   final String _apiUrl;
 
+  static const String defaultApiUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent';
+
   AiService({
     FlutterSecureStorage? storage,
     http.Client? client,
     String? apiUrl,
   })  : _storage = storage ?? const FlutterSecureStorage(),
         _client = client ?? http.Client(),
-        _apiUrl = apiUrl ??
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+        _apiUrl = _resolveApiUrl(apiUrl);
+
+  static String _resolveApiUrl(String? url) {
+    if (url == null || url.isEmpty || url.contains('gemini-pro:')) {
+      return defaultApiUrl;
+    }
+    return url;
+  }
 
   Future<String> ask(String question) async {
     final apiKey = await _storage.read(key: 'ai_api_key');
@@ -244,3 +253,4 @@ Pengujian komprehensif dijalankan pada test/ai_chat_test.dart:
 - Test 8: ChatScreen mendeteksi nomor NIK 16 digit dan memunculkan dialog peringatan privasi. (Lulus)
 
 Total pengujian: Seluruh 34 test pada project (8 test AI Chat baru + 26 test fitur catatan offline) berstatus lulus (All tests passed!).
+
