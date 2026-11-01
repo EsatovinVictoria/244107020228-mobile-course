@@ -131,6 +131,11 @@ class NotesPage extends ConsumerWidget {
             onPressed: forceOffline ? null : () => _sync(context, ref),
           ),
           IconButton(
+            tooltip: 'Tanya AI Assistant',
+            icon: const Icon(Icons.smart_toy_outlined),
+            onPressed: () => context.push('/chat'),
+          ),
+          IconButton(
             tooltip: 'Lihat Posts',
             icon: const Icon(Icons.article_outlined),
             onPressed: () => Navigator.of(
