@@ -254,3 +254,20 @@ Pengujian komprehensif dijalankan pada test/ai_chat_test.dart:
 
 Total pengujian: Seluruh 34 test pada project (8 test AI Chat baru + 26 test fitur catatan offline) berstatus lulus (All tests passed!).
 
+
+
+---
+
+## Tampilan Antarmuka Aplikasi
+
+### 1. Tampilan Fitur Chat AI
+
+Berikut merupakan tampilan antarmuka fitur chat AI saat dijalankan pada aplikasi:
+
+![Tampilan Fitur](screenshots/tampilanFitur.png)
+
+### 2. Tampilan Respon AI Bahasa Indonesia
+
+Berikut merupakan tampilan respon jawaban dari asisten AI menggunakan Bahasa Indonesia:
+
+![Tampilan Bahasa Indonesia](screenshots/tampilanBahasaIndonesia.png)
