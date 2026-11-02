@@ -1,3 +1,5 @@
+import 'package:go_router/go_router.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -299,6 +301,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: AppBar(
         title: const Text('AI Assistant Chat'),
         actions: [
+          IconButton(
+            tooltip: 'AI Tools (OCR, STT, Vision)',
+            icon: const Icon(Icons.document_scanner_outlined),
+            onPressed: () => context.push('/ai-tools'),
+          ),
           IconButton(
             tooltip: 'Pengaturan API Key',
             icon: const Icon(Icons.key_outlined),

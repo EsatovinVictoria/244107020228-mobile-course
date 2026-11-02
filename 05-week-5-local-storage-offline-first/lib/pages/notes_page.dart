@@ -136,6 +136,11 @@ class NotesPage extends ConsumerWidget {
             onPressed: () => context.push('/chat'),
           ),
           IconButton(
+            tooltip: 'AI Tools (OCR, STT, Vision)',
+            icon: const Icon(Icons.document_scanner_outlined),
+            onPressed: () => context.push('/ai-tools'),
+          ),
+          IconButton(
             tooltip: 'Lihat Posts',
             icon: const Icon(Icons.article_outlined),
             onPressed: () => Navigator.of(
