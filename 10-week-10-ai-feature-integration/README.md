@@ -1,7 +1,7 @@
 # 10-week-10-ai-feature-integration
-
+`
 ## Tujuan Pembelajaran
-
+`
 Setelah menyelesaikan praktikum ini, mahasiswa mampu:
 1. Memahami konsep integrasi LLM API ke dalam aplikasi mobile Flutter.
 2. Merancang antarmuka percakapan (chat interface) dengan dukungan streaming response secara realtime.
@@ -9,52 +9,52 @@ Setelah menyelesaikan praktikum ini, mahasiswa mampu:
 4. Menerapkan prompt design yang aman dan efektif pada lingkungan mobile.
 5. Menangani aspek privasi pengguna, pengelolaan biaya API, penanganan error, dan desain fallback.
 6. Mengevaluasi pengalaman pengguna (UX) pada fitur kecerdasan buatan di perangkat bergerak.
-
+`
 ---
-
+`
 ## Konsep Integrasi Fitur AI
-
+`
 ### 1. Apa itu Integrasi Fitur AI?
-
+`
 Integrasi fitur AI memungkinkan aplikasi mobile berkomunikasi dengan model kecerdasan buatan di cloud untuk menyediakan layanan cerdas kepada pengguna:
 - Chat Asisten: Tanya jawab interaktif dalam waktu nyata menggunakan LLM API (seperti Google Gemini).
 - OCR (Optical Character Recognition): Ekstraksi teks dari gambar atau dokumen catatan.
 - Speech-to-Text: Mengonversi input suara pengguna menjadi format teks.
 - Image Understanding: Analisis gambar dan pembuatan deskripsi konten visual.
 - Recommendation: Rekomendasi personalisasi berdasarkan catatan atau preferensi pengguna.
-
+`
 ### 2. Arsitektur Integrasi AI
-
+`
 Alur komunikasi fitur AI dirancang dengan pemisahan tanggung jawab yang jelas:
 - Flutter UI (Presentation): Menampilkan pesan, indikator loading, dan streaming bubble respons AI.
 - AI Service Layer: Bertugas menyusun format request JSON, mengelola otentikasi header, dan mem-parsing respon Server-Sent Events (SSE).
 - Secure Storage Layer: Menyimpan API Key pengguna secara terenkripsi menggunakan Flutter Secure Storage pada keystore perangkat.
 - Cloud AI Provider: Endpoint Google Gemini API yang memproses inference prompt.
-
+`
 Aturan keamanan arsitektur:
 - Kunci API tidak boleh disimpan secara hardcoded di dalam kode sumber aplikasi.
 - Gunakan Flutter Secure Storage untuk menyimpan token atau API Key secara aman.
 - Perhatikan kuota dan batasan rate limit request per menit.
 - Terapkan mekanisme validasi lokal untuk mencegah data pribadi sensitif terkirim ke server AI eksternal.
-
+`
 ### 3. Prompt Design untuk Mobile
-
+`
 Struktur prompt terarah untuk aplikasi mobile:
 - System prompt: Menetapkan persona asisten, batasan domain, dan gaya bahasa respon yang ringkas.
 - User prompt: Pertanyaan atau instruksi dari pengguna melalui kolom input chat.
 - Konteks: Data pendukung yang relevan (misalnya ringkasan catatan pengguna) tanpa menyertakan kredensial rahasia.
 - Batasan keamanan: Larangan keras menyertakan NIK, nomor telepon, alamat rumah, atau data rahasia perbankan.
-
+`
 ---
-
+`
 ## Praktikum: Chat Interface dengan AI
-
+`
 Praktikum ini mengimplementasikan integrasi Google Gemini ke dalam project 05-week-5-local-storage-offline-first.
-
+`
 ### Langkah 1: Penambahan Dependensi
-
+`
 Dependensi berikut ditambahkan ke dalam berkas pubspec.yaml:
-
+`
 ```yaml
 dependencies:
   flutter:
@@ -69,24 +69,24 @@ dependencies:
   http: ^1.6.0
   flutter_secure_storage: ^11.2.0
 ```
-
+`
 ### Langkah 2: Pembuatan AI Service
-
+`
 Berkas lib/ai/ai_service.dart dibuat untuk menangani komunikasi HTTP POST ke endpoint Google Gemini API:
-
+`
 ```dart
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-
+`
 class AiService {
   final FlutterSecureStorage _storage;
   final http.Client _client;
   final String _apiUrl;
-
+`
   static const String defaultApiUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent';
-
+`
   AiService({
     FlutterSecureStorage? storage,
     http.Client? client,
@@ -94,20 +94,20 @@ class AiService {
   })  : _storage = storage ?? const FlutterSecureStorage(),
         _client = client ?? http.Client(),
         _apiUrl = _resolveApiUrl(apiUrl);
-
+`
   static String _resolveApiUrl(String? url) {
     if (url == null || url.isEmpty || url.contains('gemini-pro:')) {
       return defaultApiUrl;
     }
     return url;
   }
-
+`
   Future<String> ask(String question) async {
     final apiKey = await _storage.read(key: 'ai_api_key');
     if (apiKey == null || apiKey.isEmpty) {
       throw Exception('API key tidak tersedia. Silakan atur di pengaturan.');
     }
-
+`
     final response = await _client.post(
       Uri.parse('$_apiUrl?key=$apiKey'),
       headers: {'Content-Type': 'application/json'},
@@ -121,7 +121,7 @@ class AiService {
         ]
       }),
     );
-
+`
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data['candidates'][0]['content']['parts'][0]['text'];
@@ -129,17 +129,17 @@ class AiService {
       throw Exception('Gagal memanggil AI API: ${response.statusCode}');
     }
   }
-
+`
   Stream<String> askStream(String question) async* {
     final apiKey = await _storage.read(key: 'ai_api_key');
     if (apiKey == null || apiKey.isEmpty) {
       throw Exception('API key tidak tersedia. Silakan atur di pengaturan.');
     }
-
+`
     final streamUrl = _apiUrl.contains('generateContent')
         ? _apiUrl.replaceFirst('generateContent', 'streamGenerateContent')
         : _apiUrl;
-
+`
     final request = http.Request(
       'POST',
       Uri.parse('$streamUrl?alt=sse&key=$apiKey'),
@@ -154,7 +154,7 @@ class AiService {
         }
       ]
     });
-
+`
     final streamedResponse = await _client.send(request);
     if (streamedResponse.statusCode != 200) {
       final body = await streamedResponse.stream.bytesToString();
@@ -162,13 +162,13 @@ class AiService {
         'Gagal memanggil AI API: ${streamedResponse.statusCode} - $body',
       );
     }
-
+`
     String buffer = '';
     await for (final chunk in streamedResponse.stream.transform(utf8.decoder)) {
       buffer += chunk;
       final lines = buffer.split('\n');
       buffer = lines.removeLast();
-
+`
       for (final line in lines) {
         final trimmed = line.trim();
         if (trimmed.startsWith('data: ')) {
@@ -191,29 +191,29 @@ class AiService {
       }
     }
   }
-
+`
   Future<void> saveApiKey(String key) async {
     await _storage.write(key: 'ai_api_key', value: key);
   }
-
+`
   Future<String?> getApiKey() async {
     return _storage.read(key: 'ai_api_key');
   }
-
+`
   Future<void> removeApiKey() async {
     await _storage.delete(key: 'ai_api_key');
   }
 }
 ```
-
+`
 Fitur utama pada AiService:
 1. Pengecekan keberadaan kunci API pada storage terenkripsi sebelum request dikirim.
 2. Method ask untuk permintaan synchronous standar.
 3. Method askStream yang memanfaatkan Server-Sent Events (SSE) streamGenerateContent agar respon diterima kata demi kata secara responsif.
 4. Method saveApiKey, getApiKey, dan removeApiKey untuk siklus pengelolaan kunci API pengguna secara mandiri.
-
+`
 ### Langkah 3: Pembuatan Chat Screen dan Integrasi UI
-
+`
 Berkas lib/features/chat_screen.dart dibuat dengan komponen berikut:
 1. AppBar yang dilengkapi ikon pengaturan API Key dan tombol bersihkan chat.
 2. Banner peringatan privasi di bagian atas layar untuk mengingatkan pengguna agar tidak membagikan NIK atau nomor telepon rahasia.
@@ -221,135 +221,135 @@ Berkas lib/features/chat_screen.dart dibuat dengan komponen berikut:
 4. Tampilan Empty State yang informatif saat percakapan baru dimulai.
 5. Bubble chat dengan styling kontras antara pesan pengguna dan pesan asisten AI.
 6. Indikator loading dan efek animasi streaming saat AI sedang memproses teks jawaban.
-
+`
 Navigasi diintegrasikan ke lib/router.dart dengan route /chat, serta tombol akses langsung di AppBar halaman utama NotesPage.
-
+`
 ---
-
+`
 ## Praktikum 2: OCR, Speech-to-Text, dan Image Understanding
+`
 
-
-
+`
 Praktikum ini memperluas kemampuan kecerdasan buatan aplikasi dengan integrasi multimodal (pengolahan teks, gambar, dan audio).
+`
 
-
-
+`
 ### 1. OCR (Optical Character Recognition)
+`
 
-
-
+`
 Fitur OCR memungkinkan aplikasi mengekstrak teks secara otomatis dari gambar menggunakan kamera atau galeri:
-
+`
 - Pengambilan gambar memanfaatkan package image_picker (kamera atau galeri).
-
+`
 - Ekstraksi teks memanfaatkan kemampuan multimodal Google Gemini via method recognizeText pada AiService.
-
+`
 - Skenario penggunaan: Digitalisasi kartu identitas/KTM mahasiswa, struk belanja/receipt, dokumen cetak, dan papan pengumuman kampus.
-
+`
 - Integrasi penyimpanan: Teks hasil ekstraksi dapat langsung disalin ke clipboard atau disimpan menjadi catatan baru ke database SQLite lokal.
+`
 
-
-
+`
 Contoh pemanggilan method:
+`
 
-
-
+`
 `dart
-
+`
 final result = await aiService.recognizeText(imageFile);
-
+`
+`
 `
 
-
-
+`
 ### 2. Image Understanding (Vision)
+`
 
-
-
+`
 Fitur Image Understanding memungkinkan AI menganalisis isi visual gambar secara mendalam:
-
+`
 - Pengguna dapat menyertakan instruksi analisis (prompt) khusus atau menggunakan prompt default.
-
+`
 - Skenario penggunaan: Deskripsi produk, identifikasi objek visual, ekstraksi konteks gambar, dan fitur aksesibilitas bagi penyandang disabilitas netra.
-
+`
 - Method describeImage pada AiService menyusun payload inlineData base64 untuk dianalisis oleh Gemini.
+`
 
-
-
+`
 Contoh pemanggilan method:
+`
 
-
-
+`
 `dart
-
+`
 final desc = await aiService.describeImage(imageFile, prompt: 'Jelaskan objek pada gambar');
-
+`
+`
 `
 
-
-
+`
 ### 3. Speech-to-Text (STT)
-
-
-
-Fitur Speech-to-Text mengonversi rekaman suara menjadi teks tertulis secara instan:
-
-- Input audio diproses dan dikirim ke AI API via method speechToText pada AiService.
-
-- Skenario penggunaan: Input catatan cepat tanpa mengetik (hands-free note taking) serta mendukung aksesibilitas pengguna.
-
-- Hasil transkripsi dapat langsung disimpan ke database catatan lokal.
-
-
-
-Contoh pemanggilan method:
-
-
-
-`dart
-
-final text = await aiService.speechToText(audioFile);
-
 `
 
+`
+Fitur Speech-to-Text mengonversi rekaman suara menjadi teks tertulis secara instan:
+`
+- Input audio diproses dan dikirim ke AI API via method speechToText pada AiService.
+`
+- Skenario penggunaan: Input catatan cepat tanpa mengetik (hands-free note taking) serta mendukung aksesibilitas pengguna.
+`
+- Hasil transkripsi dapat langsung disimpan ke database catatan lokal.
+`
 
+`
+Contoh pemanggilan method:
+`
 
+`
+`dart
+`
+final text = await aiService.speechToText(audioFile);
+`
+`
+`
+
+`
 ### 4. Implementasi Layar Multimodal (MultimodalScreen)
+`
 
-
-
+`
 Berkas lib/features/multimodal_screen.dart mengintegrasikan ketiga kemampuan multimodal dalam satu antarmuka terpadu:
-
+`
 - TabBar dengan 3 tab navigasi: OCR Teks, Vision, dan Speech-to-Text.
-
+`
 - Tombol aksi pengambilan gambar Kamera, Galeri, dan tombol muat sampel untuk pengujian emulator.
-
+`
 - Card visualisasi hasil ekstraksi/analisis dilengkapi tombol Salin dan Simpan ke Catatan.
-
+`
 - Navigasi dihubungkan ke route /ai-tools pada lib/router.dart dan tombol akses di AppBar halaman utama NotesPage.
+`
 
-
-
+`
 ---
+`
 
-
-
+`
 ## Hasil Pengujian Mesin
-
+`
 ### 1. Formatter (dart format)
-
+`
 Pemeriksaan format kode pada seluruh file lib dan test:
 - Perintah: dart format lib test
 - Hasil: Formatted 27 files (0 changed) in 0.23 seconds.
-
+`
 ### 2. Static Analysis (dart analyze)
-
+`
 Pemeriksaan static analysis kode:
 - Perintah: dart analyze
 - Hasil: Analyzing 05-week-5-local-storage-offline-first... No issues found!
-
+`
 ### 3. Automated Unit dan Widget Tests (flutter test)
-
+`
 Pengujian komprehensif dijalankan pada test/ai_chat_test.dart:
 - Test 1: AiService.ask melempar exception ketika API key belum disimpan. (Lulus)
 - Test 2: AiService.ask mengembalikan teks respon saat status code 200. (Lulus)
@@ -359,41 +359,121 @@ Pengujian komprehensif dijalankan pada test/ai_chat_test.dart:
 - Test 6: ChatScreen menampilkan AppBar, banner privasi, dan empty state awal. (Lulus)
 - Test 7: ChatScreen mengirim pesan dan menampilkan respon streaming AI. (Lulus)
 - Test 8: ChatScreen mendeteksi nomor NIK 16 digit dan memunculkan dialog peringatan privasi. (Lulus)
-
+`
 Total pengujian: Seluruh 41 test pada project (7 test multimodal baru + 8 test AI Chat + 26 test fitur catatan offline) berstatus lulus (All tests passed!).
+`
 
+`
+---
+`
+## Tampilan Antarmuka Aplikasi
+`
+### 1. Tampilan Fitur Chat AI
+`
+Berikut merupakan tampilan antarmuka fitur chat AI saat dijalankan pada aplikasi:
+`
+![Tampilan Fitur](screenshots/tampilanFitur.png)
+`
+### 2. Tampilan Respon AI Bahasa Indonesia
+`
+Berikut merupakan tampilan respon jawaban dari asisten AI menggunakan Bahasa Indonesia:
+`
+![Tampilan Bahasa Indonesia](screenshots/tampilanBahasaIndonesia.png)
+`
+### 3. Tampilan Fitur OCR (Optical Character Recognition)
+`
+Berikut merupakan tampilan hasil ekstraksi teks dari gambar dokumen atau struk menggunakan fitur OCR:
+`
+![Tampilan OCR](screenshots/tampilanOCR.png)
+`
+### 4. Tampilan Fitur Image Understanding (Vision)
+`
+Berikut merupakan tampilan analisis dan deskripsi visual gambar menggunakan fitur Image Understanding:
+`
+![Tampilan Vision](screenshots/tampilanVision.png)
+`
+### 5. Tampilan Fitur Speech-to-Text
+`
+Berikut merupakan tampilan konversi rekaman audio menjadi teks transkripsi menggunakan fitur Speech-to-Text:
+`
+![Tampilan Speech to Text](screenshots/tampilanSpeechtoText.png)
 
 
 ---
 
-## Tampilan Antarmuka Aplikasi
+## Privasi, Biaya, Error Handling, dan Fallback
 
-### 1. Tampilan Fitur Chat AI
+### 1. Tabel Risiko dan Mitigasi
 
-Berikut merupakan tampilan antarmuka fitur chat AI saat dijalankan pada aplikasi:
+| Risiko | Mitigasi |
+| --- | --- |
+| Bocor data pengguna | Jangan kirim data sensitif ke AI API |
+| Biaya melonjak | Batasi request per user/hari, gunakan cache lokal |
+| API error / down | Tampilkan pesan ramah, opsi coba lagi, mode offline |
+| Respons tidak relevan | Terapkan validasi dan fallback ke data lokal |
 
-![Tampilan Fitur](screenshots/tampilanFitur.png)
+Penjelasan mitigasi yang diterapkan pada project:
+1. Privasi data pengguna: Diterapkan validasi lokal menggunakan ekspresi reguler (regex) untuk mendeteksi nomor NIK 16 digit dan nomor telepon sebelum prompt dikirim ke AI API. API key disimpan secara terenkripsi menggunakan Flutter Secure Storage pada hardware keystore perangkat.
+2. Pengendalian biaya: Menggunakan model AI efisien (gemini-3.5-flash), membatasi frekuensi request dengan tombol disable saat loading, dan mengutamakan penyimpanan catatan secara lokal pada SQLite.
+3. Penanganan error dan ketersediaan: Seluruh pemanggilan jaringan dibungkus blok try-catch yang menangani exception status HTTP dan timeout, serta menampilkan antarmuka peringatan yang informatif tanpa memicu crash.
+4. Fallback ke data lokal: Ketika layanan cloud tidak tersedia, pengguna diarahkan untuk tetap menggunakan fitur catatan offline berbasis SQLite dan SharedPreferences.
 
-### 2. Tampilan Respon AI Bahasa Indonesia
+### 2. Contoh Fallback Kode
 
-Berikut merupakan tampilan respon jawaban dari asisten AI menggunakan Bahasa Indonesia:
+Implementasi pola fallback try-catch saat memanggil AI Service:
 
-![Tampilan Bahasa Indonesia](screenshots/tampilanBahasaIndonesia.png)
+`dart
+try {
+  final response = await aiService.ask(question);
+} catch (e) {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Layanan AI Sibuk'),
+      content: const Text('Coba lagi nanti atau gunakan mode offline.'),
+    ),
+  );
+}
+`
 
-### 3. Tampilan Fitur OCR (Optical Character Recognition)
+---
 
-Berikut merupakan tampilan hasil ekstraksi teks dari gambar dokumen atau struk menggunakan fitur OCR:
+## Mini Project
 
-![Tampilan OCR](screenshots/tampilanOCR.png)
+1. Integrasikan satu fitur AI (chat atau OCR atau Speech-to-Text) ke project yang sudah ada.
 
-### 4. Tampilan Fitur Image Understanding (Vision)
+2. Sertakan prompt sistem, user prompt, dan output awal AI di docs/ai-log.md.
 
-Berikut merupakan tampilan analisis dan deskripsi visual gambar menggunakan fitur Image Understanding:
+3. Bukti mesin hijau: flutter analyze + flutter test di README.
 
-![Tampilan Vision](screenshots/tampilanVision.png)
+4. Tabel risiko + mitigasi privasi dan biaya di README.
 
-### 5. Tampilan Fitur Speech-to-Text
+5. Push ke 10-week-10-ai-feature-integration/ berisi lib/, docs/, README.md, screenshots/.
 
-Berikut merupakan tampilan konversi rekaman audio menjadi teks transkripsi menggunakan fitur Speech-to-Text:
+## Refleksi
 
-![Tampilan Speech to Text](screenshots/tampilanSpeechtoText.png)
+1. Fitur AI mana yang Anda integrasikan dan mengapa?
+
+Jawaban: Fitur AI yang diintegrasikan mencakup Chat Assistant interaktif dengan streaming response realtime serta kemampuan multimodal yang terdiri dari OCR (Optical Character Recognition), Image Understanding (Vision), dan Speech-to-Text (STT). Alasan memilih rangkaian fitur ini adalah untuk memberikan nilai tambah nyata pada aplikasi Offline Notes. Pengguna tidak hanya dapat mencatat dengan mengetik biasa, melainkan juga dapat mendigitalkan catatan fisik dari struk atau kartu KTM via OCR, menganalisis objek visual, dan membuat catatan cepat menggunakan suara (STT) tanpa mengetik manual.
+
+2. Bagaimana Anda melindungi privasi pengguna saat menggunakan AI API?
+
+Jawaban: Perlindungan privasi pengguna diterapkan melalui pendekatan pertahanan berlapis: Pertama, kunci API Google Gemini tidak pernah disimpan secara hardcoded di dalam source code, melainkan dikelola secara dinamis melalui dialog pengaturan dan disimpan terenkripsi menggunakan Flutter Secure Storage pada keystore aman perangkat. Kedua, antarmuka menyediakan banner peringatan privasi yang mengingatkan pengguna agar tidak membagikan informasi rahasia. Ketiga, sistem menerapkan validasi filter client-side berbasis pola regex untuk mendeteksi data sensitif berupa nomor NIK 16 digit dan nomor telepon sebelum request dikirim ke cloud. Jika terdeteksi, dialog konfirmasi peringatan privasi akan muncul untuk mencegah pengiriman data pribadi yang tidak disengaja.
+
+3. Fallback apa yang Anda sediakan jika layanan AI error?
+
+Jawaban: Fallback yang disediakan mencakup beberapa tingkatan: Pertama, pada level service, jika streaming Server-Sent Events (SSE) mengalami kegagalan transmisi, sistem secara otomatis mencoba fallback ke pemanggilan HTTP standar (ask). Kedua, pada level antarmuka, semua request dikawal blok try-catch yang menangkap error jaringan, kuota habis, atau timeout, lalu menampilkan dialog pesan ramah Layanan AI Sibuk dengan opsi coba lagi. Ketiga, pada level arsitektur, aplikasi berpegang teguh pada prinsip offline-first. Jika AI tidak dapat diakses sama sekali, pengguna tetap dapat membaca, mencari, menambah, dan mengedit catatan secara normal pada basis data SQLite lokal tanpa hambatan.
+
+4. Satu hal yang Anda pelajari tentang UX fitur AI di mobile?
+
+Jawaban: Hal berharga yang dipelajari mengenai UX fitur AI pada perangkat bergerak adalah krusialnya transparansi proses dan umpan balik realtime bagi pengguna. Model AI cloud membutuhkan waktu inferensi (latency) untuk memproses teks atau media multimodal. Memberikan visualisasi respons yang mengalir kata demi kata (streaming response) dan indikator proses yang jelas terbukti jauh lebih nyaman bagi pengguna dibandingkan membiarkan layar statis dengan loading spinner yang lama. Selain itu, integrasi tombol aksi langsung seperti Salin ke Clipboard dan Simpan ke Catatan Lokal memberikan kendali penuh kepada pengguna untuk memvalidasi dan mengolah hasil AI sebelum disimpan secara permanen.
+
+## Referensi
+
+1. Slide Week 10: Integrasi Fitur AI: https://jti-polinema.github.io/flutter-codelab/00-slides/Week_10_AI_Feature_Integration.html
+2. Google Gemini AI API: https://ai.google.dev/
+3. flutter_secure_storage: https://pub.dev/packages/flutter_secure_storage
+4. http package: https://pub.dev/packages/http
+5. Riverpod: Getting started: https://riverpod.dev/docs/introduction/getting_started
+6. Learn Dart in Y Minutes: https://learnxinyminutes.com/dart/
+7. Dart Language Tour: https://dart.dev/guides/language/language-tour
