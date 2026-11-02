@@ -226,60 +226,114 @@ Navigasi diintegrasikan ke lib/router.dart dengan route /chat, serta tombol akse
 
 ---
 
-## Praktikum 2: OCR, Speech-to-Text, dan Image Understanding
-
-Praktikum ini memperluas kemampuan kecerdasan buatan aplikasi dengan integrasi multimodal (pengolahan teks, gambar, dan audio).
-
-### 1. OCR (Optical Character Recognition)
-
-Fitur OCR memungkinkan aplikasi mengekstrak teks secara otomatis dari gambar menggunakan kamera atau galeri:
-- Pengambilan gambar memanfaatkan package image_picker (kamera atau galeri).
-- Ekstraksi teks memanfaatkan kemampuan multimodal Google Gemini via method recognizeText pada AiService.
-- Skenario penggunaan: Digitalisasi kartu identitas/KTM mahasiswa, struk belanja/receipt, dokumen cetak, dan papan pengumuman kampus.
-- Integrasi penyimpanan: Teks hasil ekstraksi dapat langsung disalin ke clipboard atau disimpan menjadi catatan baru ke database SQLite lokal.
-
-Contoh pemanggilan method:
-
-`dart
-final result = await aiService.recognizeText(imageFile);
-`
-
-### 2. Image Understanding (Vision)
-
-Fitur Image Understanding memungkinkan AI menganalisis isi visual gambar secara mendalam:
-- Pengguna dapat menyertakan instruksi analisis (prompt) khusus atau menggunakan prompt default.
-- Skenario penggunaan: Deskripsi produk, identifikasi objek visual, ekstraksi konteks gambar, dan fitur aksesibilitas bagi penyandang disabilitas netra.
-- Method describeImage pada AiService menyusun payload inlineData base64 untuk dianalisis oleh Gemini.
-
-Contoh pemanggilan method:
-
-`dart
-final desc = await aiService.describeImage(imageFile, prompt: 'Jelaskan objek pada gambar');
-`
-
-### 3. Speech-to-Text (STT)
-
-Fitur Speech-to-Text mengonversi rekaman suara menjadi teks tertulis secara instan:
-- Input audio diproses dan dikirim ke AI API via method speechToText pada AiService.
-- Skenario penggunaan: Input catatan cepat tanpa mengetik (hands-free note taking) serta mendukung aksesibilitas pengguna.
-- Hasil transkripsi dapat langsung disimpan ke database catatan lokal.
-
-Contoh pemanggilan method:
-
-`dart
-final text = await aiService.speechToText(audioFile);
-`
-
-### 4. Implementasi Layar Multimodal (MultimodalScreen)
-
-Berkas lib/features/multimodal_screen.dart mengintegrasikan ketiga kemampuan multimodal dalam satu antarmuka terpadu:
-- TabBar dengan 3 tab navigasi: OCR Teks, Vision, dan Speech-to-Text.
-- Tombol aksi pengambilan gambar Kamera, Galeri, dan tombol muat sampel untuk pengujian emulator.
-- Card visualisasi hasil ekstraksi/analisis dilengkapi tombol Salin dan Simpan ke Catatan.
-- Navigasi dihubungkan ke route /ai-tools pada lib/router.dart dan tombol akses di AppBar halaman utama NotesPage.
-
----
-
+## Praktikum 2: OCR, Speech-to-Text, dan Image Understanding
+
+
+
+Praktikum ini memperluas kemampuan kecerdasan buatan aplikasi dengan integrasi multimodal (pengolahan teks, gambar, dan audio).
+
+
+
+### 1. OCR (Optical Character Recognition)
+
+
+
+Fitur OCR memungkinkan aplikasi mengekstrak teks secara otomatis dari gambar menggunakan kamera atau galeri:
+
+- Pengambilan gambar memanfaatkan package image_picker (kamera atau galeri).
+
+- Ekstraksi teks memanfaatkan kemampuan multimodal Google Gemini via method recognizeText pada AiService.
+
+- Skenario penggunaan: Digitalisasi kartu identitas/KTM mahasiswa, struk belanja/receipt, dokumen cetak, dan papan pengumuman kampus.
+
+- Integrasi penyimpanan: Teks hasil ekstraksi dapat langsung disalin ke clipboard atau disimpan menjadi catatan baru ke database SQLite lokal.
+
+
+
+Contoh pemanggilan method:
+
+
+
+`dart
+
+final result = await aiService.recognizeText(imageFile);
+
+`
+
+
+
+### 2. Image Understanding (Vision)
+
+
+
+Fitur Image Understanding memungkinkan AI menganalisis isi visual gambar secara mendalam:
+
+- Pengguna dapat menyertakan instruksi analisis (prompt) khusus atau menggunakan prompt default.
+
+- Skenario penggunaan: Deskripsi produk, identifikasi objek visual, ekstraksi konteks gambar, dan fitur aksesibilitas bagi penyandang disabilitas netra.
+
+- Method describeImage pada AiService menyusun payload inlineData base64 untuk dianalisis oleh Gemini.
+
+
+
+Contoh pemanggilan method:
+
+
+
+`dart
+
+final desc = await aiService.describeImage(imageFile, prompt: 'Jelaskan objek pada gambar');
+
+`
+
+
+
+### 3. Speech-to-Text (STT)
+
+
+
+Fitur Speech-to-Text mengonversi rekaman suara menjadi teks tertulis secara instan:
+
+- Input audio diproses dan dikirim ke AI API via method speechToText pada AiService.
+
+- Skenario penggunaan: Input catatan cepat tanpa mengetik (hands-free note taking) serta mendukung aksesibilitas pengguna.
+
+- Hasil transkripsi dapat langsung disimpan ke database catatan lokal.
+
+
+
+Contoh pemanggilan method:
+
+
+
+`dart
+
+final text = await aiService.speechToText(audioFile);
+
+`
+
+
+
+### 4. Implementasi Layar Multimodal (MultimodalScreen)
+
+
+
+Berkas lib/features/multimodal_screen.dart mengintegrasikan ketiga kemampuan multimodal dalam satu antarmuka terpadu:
+
+- TabBar dengan 3 tab navigasi: OCR Teks, Vision, dan Speech-to-Text.
+
+- Tombol aksi pengambilan gambar Kamera, Galeri, dan tombol muat sampel untuk pengujian emulator.
+
+- Card visualisasi hasil ekstraksi/analisis dilengkapi tombol Salin dan Simpan ke Catatan.
+
+- Navigasi dihubungkan ke route /ai-tools pada lib/router.dart dan tombol akses di AppBar halaman utama NotesPage.
+
+
+
+---
+
+
+
 ## Hasil Pengujian Mesin
 
 ### 1. Formatter (dart format)
@@ -325,3 +379,21 @@ Berikut merupakan tampilan antarmuka fitur chat AI saat dijalankan pada aplikasi
 Berikut merupakan tampilan respon jawaban dari asisten AI menggunakan Bahasa Indonesia:
 
 ![Tampilan Bahasa Indonesia](screenshots/tampilanBahasaIndonesia.png)
+
+### 3. Tampilan Fitur OCR (Optical Character Recognition)
+
+Berikut merupakan tampilan hasil ekstraksi teks dari gambar dokumen atau struk menggunakan fitur OCR:
+
+![Tampilan OCR](screenshots/tampilanOCR.png)
+
+### 4. Tampilan Fitur Image Understanding (Vision)
+
+Berikut merupakan tampilan analisis dan deskripsi visual gambar menggunakan fitur Image Understanding:
+
+![Tampilan Vision](screenshots/tampilanVision.png)
+
+### 5. Tampilan Fitur Speech-to-Text
+
+Berikut merupakan tampilan konversi rekaman audio menjadi teks transkripsi menggunakan fitur Speech-to-Text:
+
+![Tampilan Speech to Text](screenshots/tampilanSpeechtoText.png)
