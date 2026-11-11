@@ -163,7 +163,7 @@ Praktikum dilakukan pada proyek Offline Notes (05-week-5-local-storage-offline-f
 - Menjalankan aplikasi pada mode profil menggunakan perintah flutter run --profile.
 - Membuka DevTools Performance tab, memulai perekaman profil (Record), dan melakukan skenario fling scroll cepat serta navigasi bolak-balik.
 - Hasil awal mencatat rata-rata frame time 19.8 ms pada UI thread, 22.4 ms pada Raster thread, 24.3% jank frame, dan lonjakan heap memori hingga 78.4 MB.
-- Bukti tangkapan layar disimpan pada screenshots/before-profile.png.
+- Bukti tangkapan layar disimpan pada screenshots/tampilanPerformanceBefore.png.
 
 ### Langkah 2: Identifikasi Masalah Utama
 Ditemukan tiga masalah utama yang didokumentasikan pada docs/performance-findings.md:
@@ -181,12 +181,12 @@ Ditemukan tiga masalah utama yang didokumentasikan pada docs/performance-finding
 ### Langkah 4: Verifikasi Profiling (Setelah Optimasi)
 - Menjalankan kembali skenario pengujian yang sama pada mode profil.
 - Rata-rata frame time turun menjadi 8.2 ms (peningkatan kecepatan 58.6%), persentase jank frame turun menjadi 0.0% (mulus 60 FPS konsisten).
-- Bukti tangkapan layar disimpan pada screenshots/after-profile.png.
+- Bukti tangkapan layar disimpan pada screenshots/tampilanPerformanceAfter.png dan screenshots/tampilanRepaintBoundary.png.
 
 ### Langkah 5: Memory Leak Profiling dan Heap Stability
 - Mengambil Heap Snapshot, melakukan navigasi bolak-balik antara halaman utama dan halaman detail sebanyak 5 kali, kemudian mengambil Heap Snapshot kembali.
 - Terbukti tidak ada objek controller yang tertinggal (retained instance bernilai nol), dan konsumsi memori stabil pada 36.2 MB.
-- Bukti grafik alokasi memori disimpan pada screenshots/memory-heap-trace.png.
+- Bukti tangkapan layar disimpan pada screenshots/tampilanMemoryProfiling.png.
 
 ---
 
@@ -233,27 +233,43 @@ Sebanyak 44 dari 44 automated unit dan widget tests lulus 100% tanpa kegagalan a
 
 ## Tampilan Tangkapan Layar Profiling
 
-### 1. Profiling Performa Sebelum Optimasi (before-profile.png)
+### 1. Profiling Performa Sebelum Optimasi (tampilanPerformanceBefore.png)
 
 Tangkapan layar ini menampilkan kondisi awal aplikasi saat dilakukan fling scroll dan streaming AI. Frame Chart menunjukkan baris frame kuning dan merah dengan rata-rata frame time 19.8 ms (24.3% jank frame). Flame Chart menunjukkan fungsi buildScope, paint, dan decode gambar memakan waktu melebihi batas 16.67 ms.
 
-![Profiling Sebelum Optimasi](screenshots/before-profile.png)
+![Profiling Sebelum Optimasi](screenshots/tampilanPerformanceBefore.png)
 
 ---
 
-### 2. Profiling Performa Setelah Optimasi (after-profile.png)
+### 2. Profiling Performa Setelah Optimasi (tampilanPerformanceAfter.png)
 
 Tangkapan layar ini menampilkan performa aplikasi setelah penerapan RepaintBoundary, Riverpod select, dan pembatasan cache gambar. Seluruh batang frame berada pada zona hijau dengan rata-rata frame time 8.2 ms (nol persen jank frame, 60 FPS mulus).
 
-![Profiling Setelah Optimasi](screenshots/after-profile.png)
+![Profiling Setelah Optimasi](screenshots/tampilanPerformanceAfter.png)
 
 ---
 
-### 3. Penelusuran Memori Heap dan Deteksi Kebocoran (memory-heap-trace.png)
+### 3. Inspeksi Widget dan Layer Repaint Boundary (tampilanRepaintBoundary.png)
 
-Tangkapan layar ini membandingkan riwayat konsumsi memori Dart Heap selama 5 siklus navigasi bolak-balik. Garis merah menunjukkan alokasi yang terus menanjak sebelum optimasi akibat controller yang tertahan dan bitmap mentah, sedangkan garis hijau menunjukkan alokasi yang stabil pada 36.2 MB setelah penerapan dispose() ketat dan pembatasan ukuran cache gambar.
+Tangkapan layar ini menampilkan inspeksi pohon widget di Flutter DevTools yang memverifikasi bahwa widget item list dibungkus oleh RepaintBoundary. Langkah ini memastikan bahwa operasi re-paint pada satu item atau pembaruan teks streaming terisolasi secara mandiri tanpa mengecat ulang seluruh pohon widget.
 
-![Penelusuran Memori Heap](screenshots/memory-heap-trace.png)
+![Inspeksi Repaint Boundary](screenshots/tampilanRepaintBoundary.png)
+
+---
+
+### 4. Profiling Memori Heap dan Deteksi Kebocoran (tampilanMemoryProfiling.png)
+
+Tangkapan layar ini menampilkan riwayat alokasi memori Dart Heap pada tab Memory di Flutter DevTools selama siklus navigasi bolak-balik. Pengujian membuktikan alokasi memori terkendali stabil dan terbebas dari penumpukan objek yang tidak terbuang (memory leak) berkat pembersihan controller pada dispose().
+
+![Profiling Memori Heap](screenshots/tampilanMemoryProfiling.png)
+
+---
+
+### 5. Tampilan Fitur Lazy Paging dan Infinite Scroll (tampilanLazyPaging.png)
+
+Tangkapan layar ini menampilkan antarmuka aplikasi pada layar Posts Cache-first & Paging. Data dimuat secara bertahap dalam ukuran batch 15 item menggunakan ScrollController, menghemat alokasi memori awal serta menjaga transisi scroll tetap mulus dan responsif.
+
+![Tampilan Lazy Paging](screenshots/tampilanLazyPaging.png)
 
 ---
 
@@ -264,7 +280,7 @@ Penyelesaian tantangan mini project integrasi optimasi performa meliputi poin-po
 - [x] Mengoptimalkan performa proyek aplikasi yang telah ada dengan minimal tiga teknik utama (RepaintBoundary, Pagination Infinite Scroll, dan Bounded Image Cache Memory).
 - [x] Mendokumentasikan temuan masalah secara terperinci pada berkas docs/performance-findings.md.
 - [x] Menyusun laporan komparasi metrik sebelum dan sesudah optimasi secara kuantitatif pada berkas docs/performance-report.md.
-- [x] Menyediakan bukti tangkapan layar DevTools CPU Performance Frame Chart before dan after, serta penelusuran stabilitas memori.
+- [x] Menyediakan bukti tangkapan layar DevTools CPU Performance Frame Chart before dan after, inspeksi Repaint Boundary, stabilitas memori, serta antarmuka lazy paging.
 - [x] Memastikan bukti mesin hijau dart format, dart analyze nol issue, dan flutter test 44 dari 44 lulus.
 - [x] Mengunggah seluruh deliverable ke direktori 11-week-11-performance-optimization yang berisi lib/, docs/, README.md, dan screenshots/.
 

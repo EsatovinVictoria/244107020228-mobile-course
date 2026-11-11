@@ -25,14 +25,14 @@ Tujuan optimasi adalah menghilangkan frame drop (jank) saat scroll dan streaming
 
 ## 3. Temuan Profiling dan Analisis Flame Chart
 
-### 3.1. Analisis Sebelum Optimasi (before-profile.png)
+### 3.1. Analisis Sebelum Optimasi (tampilanPerformanceBefore.png)
 Pada pengujian awal sebelum optimasi:
 1. Frame Chart menunjukkan baris frame berwarna kuning (16.67 ms - 32 ms) dan merah (> 32 ms) secara berulang saat pengguna melakukan fling scroll pada daftar catatan.
 2. Analisis Flame Chart pada UI Thread mengindikasikan fungsi BuildOwner.buildScope dan RenderParagraph.paint menyita waktu eksekusi hingga 18.2 ms.
 3. Ketiadaan batasan isolasi paint pada widget list item menyebabkan setiap pembaruan data atau animasi memicu re-painting pada seluruh kanvas layar.
 4. Pada Raster Thread, fungsi decoding gambar sensor kamera (resolusi asli 12 MP) menyita 11.8 ms akibat ketiadaan pembatasan resolusi cache bitmap.
 
-### 3.2. Analisis Setelah Optimasi (after-profile.png)
+### 3.2. Analisis Setelah Optimasi (tampilanPerformanceAfter.png dan tampilanRepaintBoundary.png)
 Setelah tiga teknik optimasi diterapkan:
 1. Seluruh bar frame pada Frame Chart berwarna hijau dengan durasi rata-rata 8.2 ms per frame, berada jauh di bawah ambang batas frame budget 16.67 ms (bahkan mendekati target 120 FPS yaitu 8.33 ms).
 2. Flame Chart membuktikan pemisahan layer paint berhasil mengisolasi widget NoteTile dan bubble chat dengan RepaintBoundary. Waktu eksekusi paint turun menjadi 1.1 ms.
@@ -51,7 +51,7 @@ Setelah tiga teknik optimasi diterapkan:
   2. lib/features/chat_screen.dart: Mengisolasi bubble chat dan menggunakan select pada provider.
   3. lib/pages/notes_page.dart: Menerapkan select pada filteredNotesProvider dan status pencarian.
 
-### 4.2. Teknik 2: Lazy Loading dan Infinite Scroll Pagination
+### 4.2. Teknik 2: Lazy Loading dan Infinite Scroll Pagination (tampilanLazyPaging.png)
 - Alasan Pemilihan:
   Memuat seluruh data secara sekaligus membebani memori dan memperlambat initial render saat koleksi data berkembang menjadi ratusan atau ribuan baris. Penerapan pagination berbasis ScrollController memastikan data hanya diambil dan dialokasikan secara on-demand saat pengguna mendekati dasar tampilan (threshold 200 piksel).
 - Lokasi Penerapan:
@@ -67,7 +67,7 @@ Setelah tiga teknik optimasi diterapkan:
 
 ---
 
-## 5. Hasil Verifikasi Memory Profiling (memory-heap-trace.png)
+## 5. Hasil Verifikasi Memory Profiling (tampilanMemoryProfiling.png)
 
 Pengujian ketahanan memori dilakukan dengan membuka halaman detail atau halaman alat AI, kemudian kembali ke halaman utama, diulang sebanyak 5 kali siklus secara berurutan:
 - Kondisi Awal: Terjadi kebocoran alokasi controller dan cache bitmap yang menyebabkan heap naik dari 42.6 MB ke 78.4 MB (grafik tangga meningkat tanpa kembali ke titik awal).
