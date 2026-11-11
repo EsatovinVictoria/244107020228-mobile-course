@@ -20,13 +20,11 @@ class _MultimodalScreenState extends ConsumerState<MultimodalScreen>
   late TabController _tabController;
   final ImagePicker _picker = ImagePicker();
 
-  // OCR State
   Uint8List? _ocrImageBytes;
   String? _ocrImageName;
   String? _ocrResult;
   bool _isOcrLoading = false;
 
-  // Image Understanding State
   Uint8List? _visionImageBytes;
   String? _visionImageName;
   final TextEditingController _visionPromptController = TextEditingController(
@@ -35,7 +33,6 @@ class _MultimodalScreenState extends ConsumerState<MultimodalScreen>
   String? _visionResult;
   bool _isVisionLoading = false;
 
-  // Speech-to-Text State
   Uint8List? _audioBytes;
   String? _audioName;
   String? _sttResult;
@@ -71,7 +68,6 @@ class _MultimodalScreenState extends ConsumerState<MultimodalScreen>
   }
 
   void _loadSampleDocumentForOcr() {
-    // 1x1 transparent pixel png or simple sample bytes
     final sampleBytes = base64Decode(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
     );
@@ -174,7 +170,6 @@ class _MultimodalScreenState extends ConsumerState<MultimodalScreen>
   }
 
   void _loadSampleAudioForStt() {
-    // Dummy audio sample byte container
     final sampleBytes = utf8.encode('RIFF....WAVEfmt ....data....');
     setState(() {
       _audioBytes = Uint8List.fromList(sampleBytes);
@@ -302,7 +297,12 @@ class _MultimodalScreenState extends ConsumerState<MultimodalScreen>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.memory(_ocrImageBytes!, fit: BoxFit.contain),
+                child: Image.memory(
+                  _ocrImageBytes!,
+                  fit: BoxFit.contain,
+                  cacheWidth: 400,
+                  cacheHeight: 400,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -397,7 +397,12 @@ class _MultimodalScreenState extends ConsumerState<MultimodalScreen>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.memory(_visionImageBytes!, fit: BoxFit.contain),
+                child: Image.memory(
+                  _visionImageBytes!,
+                  fit: BoxFit.contain,
+                  cacheWidth: 400,
+                  cacheHeight: 400,
+                ),
               ),
             ),
             const SizedBox(height: 12),

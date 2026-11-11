@@ -263,6 +263,7 @@ class _NotesContent extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final note = notes[index];
                     return NoteTile(
+                      key: ValueKey(note.id ?? note.title),
                       note: note,
                       onTap: () => context.push('/note/${note.id}'),
                     );

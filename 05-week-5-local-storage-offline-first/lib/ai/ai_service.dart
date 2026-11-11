@@ -119,9 +119,7 @@ class AiService {
                 }
               }
             }
-          } catch (_) {
-            // Ignore incomplete JSON chunks during streaming
-          }
+          } catch (_) {}
         }
       }
     }
