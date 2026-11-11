@@ -10,22 +10,24 @@ class NoteTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      title: Text(note.title),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (note.body.isNotEmpty) Text(note.body),
-          if (note.dirty) ...[
-            const SizedBox(height: 4),
-            const Badge(label: Text('Belum tersinkron')),
+    return RepaintBoundary(
+      child: ListTile(
+        onTap: onTap,
+        title: Text(note.title),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (note.body.isNotEmpty) Text(note.body),
+            if (note.dirty) ...[
+              const SizedBox(height: 4),
+              const Badge(label: Text('Belum tersinkron')),
+            ],
           ],
-        ],
+        ),
+        trailing: note.dirty
+            ? const Icon(Icons.cloud_off)
+            : const Icon(Icons.cloud_done),
       ),
-      trailing: note.dirty
-          ? const Icon(Icons.cloud_off)
-          : const Icon(Icons.cloud_done),
     );
   }
 }
