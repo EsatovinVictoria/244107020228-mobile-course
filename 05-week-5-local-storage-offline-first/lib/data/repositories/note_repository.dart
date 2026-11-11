@@ -15,6 +15,17 @@ class NoteRepository {
     return rows.map(Note.fromMap).toList();
   }
 
+  Future<List<Note>> fetchNotesPaged({int offset = 0, int limit = 20}) async {
+    final db = await _openDb();
+    final rows = await db.query(
+      'notes',
+      orderBy: 'updated_at DESC',
+      limit: limit,
+      offset: offset,
+    );
+    return rows.map(Note.fromMap).toList();
+  }
+
   Future<Note> addNote({required String title, String body = ''}) async {
     final db = await _openDb();
     final note = Note(
