@@ -6,6 +6,7 @@ import '../data/local/note.dart';
 import '../data/repositories/note_repository.dart';
 import '../data/sync.dart';
 import '../domain/usecases/search_notes.dart';
+import '../domain/validators/note_validator.dart';
 import '../providers/offline_provider.dart';
 import '../widgets/note_tile.dart';
 import 'posts_page.dart';
@@ -59,43 +60,10 @@ class NotesPage extends ConsumerWidget {
     ref.invalidate(notesProvider);
   }
 
-  Future<Map<String, String>?> _showAddNoteDialog(BuildContext context) async {
-    final titleController = TextEditingController();
-    final bodyController = TextEditingController();
-
+  Future<Map<String, String>?> _showAddNoteDialog(BuildContext context) {
     return showDialog<Map<String, String>>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Tambah Catatan'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(labelText: 'Judul'),
-            ),
-            TextField(
-              controller: bodyController,
-              decoration: const InputDecoration(labelText: 'Isi'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final title = titleController.text.trim();
-              final body = bodyController.text.trim();
-              if (title.isEmpty) return;
-              Navigator.of(dialogContext).pop({'title': title, 'body': body});
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
+      builder: (_) => const _AddNoteDialog(),
     );
   }
 
@@ -187,6 +155,7 @@ class NotesPage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        key: const Key('add_note_fab'),
         onPressed: () => _addNote(context, ref),
         child: const Icon(Icons.add),
       ),
@@ -300,6 +269,75 @@ class _NotesEmptyState extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AddNoteDialog extends StatefulWidget {
+  const _AddNoteDialog();
+
+  @override
+  State<_AddNoteDialog> createState() => _AddNoteDialogState();
+}
+
+class _AddNoteDialogState extends State<_AddNoteDialog> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _bodyController = TextEditingController();
+  String? _titleError;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final error = validateNoteTitle(_titleController.text);
+    if (error != null) {
+      setState(() {
+        _titleError = error;
+      });
+      return;
+    }
+    final title = _titleController.text.trim();
+    final body = _bodyController.text.trim();
+    Navigator.of(context).pop({'title': title, 'body': body});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Tambah Catatan'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            key: const Key('note_title_field'),
+            controller: _titleController,
+            decoration: InputDecoration(
+              labelText: 'Judul',
+              errorText: _titleError,
+            ),
+          ),
+          TextField(
+            key: const Key('note_body_field'),
+            controller: _bodyController,
+            decoration: const InputDecoration(labelText: 'Isi'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          key: const Key('save_note_button'),
+          onPressed: _submit,
+          child: const Text('Simpan'),
+        ),
+      ],
     );
   }
 }
