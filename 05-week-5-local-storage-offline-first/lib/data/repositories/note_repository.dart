@@ -1,14 +1,16 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/repositories/note_repository_contract.dart';
 import '../local/db.dart';
 import '../local/note.dart';
 
-class NoteRepository {
+class NoteRepository implements NoteRepositoryContract {
   NoteRepository({Future<Database> Function()? openDb})
     : _openDb = openDb ?? openNotesDb;
 
   final Future<Database> Function() _openDb;
 
+  @override
   Future<List<Note>> fetchNotes() async {
     final db = await _openDb();
     final rows = await db.query('notes', orderBy: 'updated_at DESC');
@@ -26,6 +28,7 @@ class NoteRepository {
     return rows.map(Note.fromMap).toList();
   }
 
+  @override
   Future<Note> addNote({required String title, String body = ''}) async {
     final db = await _openDb();
     final note = Note(
@@ -44,11 +47,13 @@ class NoteRepository {
     );
   }
 
+  @override
   Future<void> deleteNote(int id) async {
     final db = await _openDb();
     await db.delete('notes', where: 'id = ?', whereArgs: [id]);
   }
 
+  @override
   Future<int> countDirty() async {
     final db = await _openDb();
     final rows = await db.rawQuery(
@@ -57,11 +62,13 @@ class NoteRepository {
     return ((rows.first['c'] as num?)?.toInt() ?? 0);
   }
 
+  @override
   Future<void> markAllSynced() async {
     final db = await _openDb();
     await db.update('notes', {'dirty': 0}, where: 'dirty = 1');
   }
 
+  @override
   Future<Note?> fetchNoteById(int id) async {
     final db = await _openDb();
 
@@ -79,6 +86,7 @@ class NoteRepository {
     return Note.fromMap(rows.first);
   }
 
+  @override
   Future<List<Note>> searchNotes(String query) async {
     final trimmed = query.trim().toLowerCase();
     if (trimmed.isEmpty) {
