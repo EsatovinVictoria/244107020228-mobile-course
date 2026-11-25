@@ -146,7 +146,28 @@ No issues found!
 
 ## Bukti Eksekusi Workflow GitHub Actions
 
-Workflow Flutter CI dikonfigurasi untuk berjalan otomatis saat pull request diajukan ke branch develop maupun main. Bukti hasil eksekusi pipeline (tab Actions) dan artefak android-builds (app-release.apk dan app-release.aab) ditinjau langsung pada halaman GitHub Actions repositori setelah PR dibuka.
+Workflow Flutter CI telah berhasil dijalankan otomatis pada Pull Request #22 (branch feature/week13-ci-cd-automation menuju develop) pada commit 7585e2d.
+
+Ringkasan hasil eksekusi:
+- Commit penghasil artefak: 7585e2d (fix(ci): pin flutter-version 3.47.1 to match local toolchain and prevent material deprecation info failures).
+- Status pengecekan PR #22: All checks have passed (ci / verify lulus dalam 1 menit, Flutter CI / test-and-build lulus dalam 5 menit).
+- Artefak yang dihasilkan: android-builds berukuran 74.4 MB (berisi app-release.apk dan app-release.aab) dengan digest sha256:9c477a8e2e4744565ba8b3be015ab42b4e1cc63a533.
+
+### 1. Seluruh Pengecekan CI Lulus pada Pull Request #22 (allCheckPassed.png)
+
+![All Checks Passed pada PR #22](screenshots/allCheckPassed.png)
+
+### 2. Artefak Android APK dan AAB Siap Unduh (artifacts.png)
+
+![Artefak android-builds 74.4 MB](screenshots/artifacts.png)
+
+### 3. Proses Eksekusi Job test-and-build di GitHub Actions (subosito.png)
+
+![Proses Eksekusi Flutter CI test-and-build](screenshots/subosito.png)
+
+### 4. Proses Eksekusi Pemeriksaan Format dan Analisis (dartFormat.png)
+
+![Proses Pemeriksaan Format dan Analisis](screenshots/dartFormat.png)
 
 ---
 
