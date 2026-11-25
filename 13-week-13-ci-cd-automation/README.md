@@ -68,6 +68,7 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.47.1'
           channel: stable
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed .
